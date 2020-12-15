@@ -1,4 +1,5 @@
-#pragma once
+#ifndef DICTIONARY_C
+#define DICTIONARY_C
 #include "Dictionary.h"
 
 #include <stdio.h>
@@ -425,3 +426,5 @@ static void ElementSet(Element* element, Element* nextElement, bool isOccupied, 
     memcpy(ElementGetKey(element), key, keySize);
     memcpy(ElementGetValue(element, keySize), value, valueSize);
 }
+
+#endif

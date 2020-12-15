@@ -1,4 +1,4 @@
 #include "main.c"
-#include "Array.c"
-#include "Dictionary.c"
-#include "BucketArray.c"
+#include "Containers/Array.c"
+#include "Containers/Dictionary.c"
+#include "Containers/BucketArray.c"

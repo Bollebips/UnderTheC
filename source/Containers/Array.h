@@ -1,4 +1,6 @@
-#pragma once
+#ifndef ARRAY_H
+#define ARRAY_H
+
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -16,3 +18,5 @@ void ArrayFree(Array* array);
 
 uint64_t ArrayGetNum(const Array* array);
 uint64_t ArrayGetCapacity(const Array* array);
+
+#endif

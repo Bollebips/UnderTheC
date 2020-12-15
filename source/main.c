@@ -1,6 +1,6 @@
-#include "Array.h"
-#include "BucketArray.h"
-#include "Dictionary.h"
+#include "Containers/Array.h"
+#include "Containers/BucketArray.h"
+#include "Containers/Dictionary.h"
 #include "Windows.h"
 #include <stdbool.h>
 #include <string.h>

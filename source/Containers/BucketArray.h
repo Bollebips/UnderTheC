@@ -1,4 +1,6 @@
-#pragma once
+#ifndef BUCKETARRAY_H
+#define BUCKETARRAY_H
+
 #include <stdint.h>
 
 /**
@@ -14,3 +16,5 @@ void BucketArrayFree(BucketArray* bucketArray);
 
 uint64_t BucketArrayGetNum(BucketArray* bucketArray);
 uint64_t BucketArrayGetNumBuckets(BucketArray* bucketArray);
+
+#endif

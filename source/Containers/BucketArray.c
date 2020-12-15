@@ -1,5 +1,7 @@
-#pragma once
+#ifndef BUCKETARRAY_C
+#define BUCKETARRAY_C
 #include "BucketArray.h"
+
 #include "Array.c"
 
 /**
@@ -205,3 +207,5 @@ static void BucketArrayPopBackBucket(BucketArray* bucketArray)
 
     free(lastElement);
 }
+
+#endif
