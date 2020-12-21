@@ -9,7 +9,7 @@
 */
 typedef struct Array Array;
 
-Array* ArrayNew(size_t elementSize, const uint64_t initialCapacity);
+Array* ArrayNew(size_t elementSize);
 void* ArrayAdd(Array* array, const void* newElement);
 void ArrayPopBack(Array* array, void* poppedElement);
 void* ArrayGet(const Array* array, const uint64_t index);

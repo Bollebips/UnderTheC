@@ -3,30 +3,11 @@
 #include "Dictionary.h"
 
 #include <stdio.h>
-#include "BucketArray.c"
+#include <string.h>
+#include <assert.h>
+#include <math.h>
 
-/**
- * @brief An element, part of a dictionary.
- */
-typedef struct Element
-{
-    struct Element* nextElement;    // Pointer to the next element, used in case of hash collision.
-    bool isOccupied;                // Wether or not this element has data stored in it.
-    char keyValuePair[];            // Array of bytes, containing the key and value.
-} Element;
-
-/**
- * @brief A container, which stores its data in a value, which is associated with a key. There is no limit to the number of elements, although the main capacity should be considered carefully.
- */
-struct Dictionary
-{
-    uint64_t capacity;                  // The number of elements in the main array of elements.
-    size_t keySize;                     // Memory footprint of the key data.
-    size_t valueSize;                   // Memory footprint of the value data.
-    BucketArray collisionElements;      // Array of elements that collided with other elements in the main array.
-    Element elements[];                 // The main array of elements.
-};
-
+// static const int INITIAL_CAPACITY = 16;
 static const uint64_t HASH_PRIME = 1099511628211U; // 2^40 + 2^8 + 0xb3
 static const uint64_t HASH_OFFSET = 14695981039346656037U;
 static const float COLLISION_BUCKET_SIZE_PER_MAIN_ARRAY_SIZE = 0.3f;

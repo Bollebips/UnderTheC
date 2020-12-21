@@ -7,20 +7,8 @@
 #include <math.h>
 #include <assert.h>
 
-/**
- * @brief A dynamic array, that dynamically expands its memory footprint when necessary.
- */
-struct Array
-{
-    uint64_t num;           // The number of occupied elements in the array.
-    uint64_t capacity;      // The maximum number of occupied elements before the array has to allocate more memory.
-    size_t elementSize;     // The memory footprint of 1 element.
-    void* elements;         // A pointer to the elements allocated in memory.
-};
-
-const float GOLDEN_RATIO = 1.61803398875f;
-
-static void ArrayInit(Array* array, size_t elementSize, const uint64_t initialCapacity);
+static const int INITIAL_CAPACITY = 16;
+static const float GOLDEN_RATIO = 1.61803398875f;
 
 /**
  * @brief Creates a new array, and initializes it.
@@ -28,14 +16,14 @@ static void ArrayInit(Array* array, size_t elementSize, const uint64_t initialCa
  * @param initialCapacity The initial element capacity to reserve.
  * @return Array* A pointer to the newly created array.
  */
-Array* ArrayNew(size_t elementSize, const uint64_t initialCapacity)
+Array* ArrayNew(size_t elementSize)
 {
     Array* newArray = (Array*) malloc(sizeof(Array));
 
     assert(elementSize > 0);
     assert(newArray != NULL);
 
-    ArrayInit(newArray, elementSize, initialCapacity);
+    ArrayInit(newArray, elementSize, INITIAL_CAPACITY);
 
     return newArray;
 }

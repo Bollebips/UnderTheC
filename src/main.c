@@ -82,7 +82,7 @@ void array_test()
     testers[3].f1 = 0.000001f;
     testers[3].b1 = true;
 
-    Array* testArray = ArrayNew(sizeof(test), 7);
+    Array* testArray = ArrayNew(sizeof(test));
 
     ArrayAdd(testArray, &testers[0]);
     print_array(testArray);

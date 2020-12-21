@@ -2,20 +2,10 @@
 #define BUCKETARRAY_C
 #include "BucketArray.h"
 
-#include "Array.c"
+#include <assert.h>
+#include <string.h>
+#include <math.h>
 
-/**
- * @brief A dynamic array, that dynamically expands its memory footprint when necessary. This expanding happens in buckets, in order to prevent pointers to elements becoming corrupt.
- */
-struct BucketArray
-{
-    uint64_t num;               // The maximum number of occupied elements before the array has to allocate more memory.
-    uint64_t bucketCapacity;    // The maximum number of elements per bucket.
-    size_t elementSize;         // The memory footprint of 1 element.
-    Array bucketPtrs;           // A collection of pointers to the different buckets.
-};
-
-static void BucketArrayInit(BucketArray* bucketArray, const size_t elementSize, const uint64_t bucketCapacity);
 static void BucketArrayAddBucket(BucketArray* bucketArray);
 static void BucketArrayPopBackBucket(BucketArray* bucketArray);
 
@@ -161,7 +151,7 @@ uint64_t BucketArrayGetNumBuckets(BucketArray* bucketArray)
     return ArrayGetNum(&(bucketArray->bucketPtrs));
 }
 
-/* ------------------------------------------------------------------------------------------------------------------ */
+/* ---------------------------------------------------- Internal ---------------------------------------------------- */
 
 /**
  * @brief Initialize an existing bucketArray. Only used internally. When calling BucketArrayNew, the array will already be initialized.
@@ -169,7 +159,7 @@ uint64_t BucketArrayGetNumBuckets(BucketArray* bucketArray)
  * @param elementSize The memory footprint of 1 element.
  * @param bucketCapacity The number of elements a bucket can hold.
  */
-static void BucketArrayInit(BucketArray* bucketArray, const size_t elementSize, const uint64_t bucketCapacity)
+void BucketArrayInit(BucketArray* bucketArray, const size_t elementSize, const uint64_t bucketCapacity)
 {
     assert(bucketArray != NULL);
     assert(elementSize > 0);
@@ -182,6 +172,8 @@ static void BucketArrayInit(BucketArray* bucketArray, const size_t elementSize, 
 
     BucketArrayAddBucket(bucketArray);
 }
+
+/* ----------------------------------------------------- Private ---------------------------------------------------- */
 
 /**
  * @brief Add a new bucket to the bucketArray.
