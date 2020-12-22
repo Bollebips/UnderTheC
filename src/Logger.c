@@ -47,14 +47,14 @@ static void PrintHeader()
 
 static void PrintErrorTag()
 {
-    printf("\033[0;31m");
+    printf("\033[1;31m");
     printf("[ERROR] ");
     printf("\033[0m");
 }
 
 static void PrintWarningTag()
 {
-    printf("\033[0;33m");
+    printf("\033[1;33m");
     printf("[WARNING] ");
     printf("\033[0m");
 }
