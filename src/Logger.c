@@ -10,6 +10,10 @@ static void PrintWarningTag();
 static void PrintInfoTag();
 static void PrintBody(const char* output, ...);
 
+/**
+ * @brief Print an error to the console.
+ * @param output The error to be printed.
+ */
 void LogError(const char* output, ...)
 {
     PrintHeader();
@@ -17,6 +21,10 @@ void LogError(const char* output, ...)
     PrintBody(output);
 }
 
+/**
+ * @brief Print a warning to the console.
+ * @param output The warning to be printed.
+ */
 void LogWarning(const char* output, ...)
 {
     PrintHeader();
@@ -24,6 +32,10 @@ void LogWarning(const char* output, ...)
     PrintBody(output);
 }
 
+/**
+ * @brief Print info to the console.
+ * @param output The info to be printed.
+ */
 void LogInfo(const char* output, ...)
 {
     PrintHeader();
@@ -33,6 +45,9 @@ void LogInfo(const char* output, ...)
 
 /* ----------------------------------------------------- STATICS ---------------------------------------------------- */
 
+/**
+ * @brief Print the header of any logging. This contains the current timestamp.
+ */
 static void PrintHeader()
 {
     char timeBuffer[32];
@@ -45,6 +60,9 @@ static void PrintHeader()
     vprintf(timeBuffer, NULL);
 }
 
+/**
+ * @brief Print an error tag.
+ */
 static void PrintErrorTag()
 {
     printf("\033[1;31m");
@@ -52,6 +70,9 @@ static void PrintErrorTag()
     printf("\033[0m");
 }
 
+/**
+ * @brief Print a warning tag.
+ */
 static void PrintWarningTag()
 {
     printf("\033[1;33m");
@@ -59,12 +80,19 @@ static void PrintWarningTag()
     printf("\033[0m");
 }
 
+/**
+ * @brief Print an info tag.
+ */
 static void PrintInfoTag()
 {
     printf("\033[0m");
     printf("[INFO] ");
 }
 
+/**
+ * @brief Print the body, the actual contents of the log.
+ * @param output The log to be printed.
+ */
 static void PrintBody(const char* output, ...)
 {
     va_list argp;

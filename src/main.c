@@ -18,7 +18,7 @@ typedef struct test
 
 void print_array(Array* array)
 {
-    for(int i = 0; i < ArrayGetNum(array); ++i)
+    for(int i = 0; i < ArrayNum(array); ++i)
     {
         test result = *(test*) ArrayGet(array, i);
         printf("%" PRId64 ", %" PRId64 ", %f, %d\n", result.i1, result.i2, result.f1, result.b1);
@@ -27,8 +27,8 @@ void print_array(Array* array)
 
 void PrintBucketArray(BucketArray* bucketArray)
 {
-    printf("Number of buckets = %d\n", (int) BucketArrayGetNumBuckets(bucketArray));
-    for(int i = 0; i < BucketArrayGetNum(bucketArray); ++i)
+    printf("Number of buckets = %d\n", (int) BucketArrayNumBuckets(bucketArray));
+    for(int i = 0; i < BucketArrayNum(bucketArray); ++i)
     {
         test result = *(test*) BucketArrayGet(bucketArray, i);
         printf("%" PRId64 ", %" PRId64 ", %f, %d\n", result.i1, result.i2, result.f1, result.b1);
@@ -146,9 +146,9 @@ void array_test()
     // printf("%p\n", testArray.elements);
     ArrayResize(testArray, 5);
     printf("\n\n");
-    printf("%"PRIu64"\n", ArrayGetNum(testArray));
+    printf("%"PRIu64"\n", ArrayNum(testArray));
     print_array(testArray);
-    test* lastElement = (test*) ArrayGet(testArray, ArrayGetNum(testArray) - 1);
+    test* lastElement = (test*) ArrayGet(testArray, ArrayNum(testArray) - 1);
 
     lastElement->i1 = 1;
     lastElement->i2 = 2;
@@ -165,14 +165,14 @@ void array_test()
     printf("%" PRId64 ", %" PRId64 ", %f, %d\n", newElement.i1, newElement.i2, newElement.f1, newElement.b1);
 
     printf("\n\n");
-    printf("%"PRIu64"\n", ArrayGetNum(testArray));
+    printf("%"PRIu64"\n", ArrayNum(testArray));
     print_array(testArray);
 
     ArrayPopBack(testArray, &newElement);
 
     printf("\n\n");
     printf("%" PRId64 ", %" PRId64 ", %f, %d\n", newElement.i1, newElement.i2, newElement.f1, newElement.b1);
-    printf("%"PRIu64"\n", ArrayGetNum(testArray));
+    printf("%"PRIu64"\n", ArrayNum(testArray));
 
     ArrayFree(testArray);
     testArray = NULL;

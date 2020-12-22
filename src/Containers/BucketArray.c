@@ -37,12 +37,12 @@ void* BucketArrayAdd(BucketArray* bucketArray, const void* newElement)
     assert(bucketArray != NULL);
     assert(newElement != NULL);
 
-    if(bucketArray->num >= ArrayGetNum(&(bucketArray->bucketPtrs)) * bucketArray->bucketCapacity)
+    if(bucketArray->num >= ArrayNum(&(bucketArray->bucketPtrs)) * bucketArray->bucketCapacity)
     {
         BucketArrayAddBucket(bucketArray);
     }
 
-    void* currentBucket = *(void**) ArrayGet(&(bucketArray->bucketPtrs), ArrayGetNum(&(bucketArray->bucketPtrs)) - 1);
+    void* currentBucket = *(void**) ArrayGet(&(bucketArray->bucketPtrs), ArrayNum(&(bucketArray->bucketPtrs)) - 1);
 
     uint64_t currentBucketNum = bucketArray->num % bucketArray->bucketCapacity;
     void* locationToSet = currentBucket + (currentBucketNum * bucketArray->elementSize);
@@ -82,7 +82,7 @@ void BucketArrayPopBack(BucketArray* bucketArray, void* poppedElement)
     /* TODO: Make the bucketArray preserve an extra bucket when removing elements.
         this prevents buckets from constantly being added and removed when adding and remove elements onto a full bucket.
     */
-    if(currentBucketNum == 0 && ArrayGetNum(&(bucketArray->bucketPtrs)) > 1)
+    if(currentBucketNum == 0 && ArrayNum(&(bucketArray->bucketPtrs)) > 1)
     {
         BucketArrayPopBackBucket(bucketArray);
     }
@@ -119,7 +119,7 @@ void BucketArrayFree(BucketArray* bucketArray)
 {
     assert(bucketArray != NULL);
 
-    for(int i = 0; i < ArrayGetNum(&(bucketArray->bucketPtrs)); i++)
+    for(int i = 0; i < ArrayNum(&(bucketArray->bucketPtrs)); i++)
     {
         free(ArrayGet(&(bucketArray->bucketPtrs), i));
     }
@@ -134,7 +134,7 @@ void BucketArrayFree(BucketArray* bucketArray)
  * @param bucketArray The bucketArray to get the number of elements from.
  * @return uint64_t The number of elements in the array.
  */
-uint64_t BucketArrayGetNum(BucketArray* bucketArray)
+uint64_t BucketArrayNum(BucketArray* bucketArray)
 {
     return bucketArray->num;
 }
@@ -144,9 +144,9 @@ uint64_t BucketArrayGetNum(BucketArray* bucketArray)
  * @param bucketArray The bucketArray to get the number of buckets from.
  * @return uint64_t The number of buckets in the array.
  */
-uint64_t BucketArrayGetNumBuckets(BucketArray* bucketArray)
+uint64_t BucketArrayNumBuckets(BucketArray* bucketArray)
 {
-    return ArrayGetNum(&(bucketArray->bucketPtrs));
+    return ArrayNum(&(bucketArray->bucketPtrs));
 }
 
 /* ---------------------------------------------------- Internal ---------------------------------------------------- */

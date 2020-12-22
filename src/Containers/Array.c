@@ -126,7 +126,7 @@ void ArrayFree(Array* array)
  * @param array The array to get the number of elements from.
  * @return uint64_t The number of elements in the array.
  */
-uint64_t ArrayGetNum(const Array* array)
+uint64_t ArrayNum(const Array* array)
 {
     assert(array != NULL);
     return array->num;
@@ -137,7 +137,7 @@ uint64_t ArrayGetNum(const Array* array)
  * @param array The array to get the capacity from.
  * @return uint64_t The capacity of the array.
  */
-uint64_t ArrayGetCapacity(const Array* array)
+uint64_t ArrayCapacity(const Array* array)
 {
     assert(array != NULL);
     return array->capacity;

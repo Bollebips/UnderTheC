@@ -14,7 +14,7 @@ void BucketArrayPopBack(BucketArray* bucketArray, void* poppedElement);
 void* BucketArrayGet(const BucketArray* bucketArray, const uint64_t index);
 void BucketArrayFree(BucketArray* bucketArray);
 
-uint64_t BucketArrayGetNum(BucketArray* bucketArray);
-uint64_t BucketArrayGetNumBuckets(BucketArray* bucketArray);
+uint64_t BucketArrayNum(BucketArray* bucketArray);
+uint64_t BucketArrayNumBuckets(BucketArray* bucketArray);
 
 #endif

@@ -16,7 +16,7 @@ void* ArrayGet(const Array* array, const uint64_t index);
 void ArrayResize(Array* array, const uint64_t numElements);
 void ArrayFree(Array* array);
 
-uint64_t ArrayGetNum(const Array* array);
-uint64_t ArrayGetCapacity(const Array* array);
+uint64_t ArrayNum(const Array* array);
+uint64_t ArrayCapacity(const Array* array);
 
 #endif
