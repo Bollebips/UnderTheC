@@ -1,5 +1,3 @@
-#ifndef ARRAY_C
-#define ARRAY_C
 #include "Array.h"
 
 #include <stdio.h>
@@ -163,5 +161,3 @@ void ArrayInit(Array* array, size_t elementSize, const uint64_t initialCapacity)
     array->elementSize = elementSize;
     array->elements = calloc(initialCapacity, elementSize);
 }
-
-#endif

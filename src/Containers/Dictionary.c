@@ -1,5 +1,3 @@
-#ifndef DICTIONARY_C
-#define DICTIONARY_C
 #include "Dictionary.h"
 
 #include <stdio.h>
@@ -34,6 +32,8 @@ static void ElementSet(Element* element, Element* nextElement, bool isOccupied, 
  */
 Dictionary* DictionaryNew(size_t keySize, size_t valueSize, const uint64_t capacity)
 {
+    // TODO: Get rid of the capacity paramater, and make the dictionary increase size dynamically by rehashing.
+
     Dictionary* newDictionary = malloc(sizeof(Dictionary) + capacity * (sizeof(Element*) + sizeof(bool) + keySize + valueSize));
 
     assert(keySize > 0);
@@ -407,5 +407,3 @@ static void ElementSet(Element* element, Element* nextElement, bool isOccupied, 
     memcpy(ElementGetKey(element), key, keySize);
     memcpy(ElementGetValue(element, keySize), value, valueSize);
 }
-
-#endif

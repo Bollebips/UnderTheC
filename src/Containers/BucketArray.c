@@ -1,5 +1,3 @@
-#ifndef BUCKETARRAY_C
-#define BUCKETARRAY_C
 #include "BucketArray.h"
 
 #include <assert.h>
@@ -199,5 +197,3 @@ static void BucketArrayPopBackBucket(BucketArray* bucketArray)
 
     free(lastElement);
 }
-
-#endif

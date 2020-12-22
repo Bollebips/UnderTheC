@@ -1,6 +1,7 @@
 #include "Containers/Array.h"
 #include "Containers/BucketArray.h"
 #include "Containers/Dictionary.h"
+#include "Logger.h"
 #include "Windows.h"
 #include <stdbool.h>
 #include <string.h>
@@ -316,7 +317,12 @@ int main()
 {
     // array_test();
     // BucketArrayTest();
-    dict_test();
+    // dict_test();
+
+    LogError("test %f", 3.14);
+    LogWarning("test %f", 3.14);
+    LogInfo("test %d", 69);
+
 
     // system("pause");
 
