@@ -1,52 +1,103 @@
 #include "Logger.h"
 
+#include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <time.h>
 
 static void PrintHeader();
+static void PrintAssertTag();
 static void PrintErrorTag();
 static void PrintWarningTag();
 static void PrintInfoTag();
-static void PrintBody(const char* output, ...);
+
+/**
+ * @brief Print an error to the console if the assertion failed.
+ * @param file The file where the assert was called from.
+ * @param line The line where the assert was called from.
+ * @param check The opperation to be asserted.
+ * @param message The error to be printed in case of a failed assert.
+ */
+void _LogAssert(const char* file, const int line, const bool check, const char* message, ...)
+{
+    if(!check)
+    {
+        PrintHeader();
+        PrintAssertTag();
+
+        printf("%s:%d | ", file, line);
+
+        va_list argp;
+        va_start(argp, message);
+        vprintf(message, argp);
+        va_end(argp);
+
+        printf("\n");
+
+        exit(EXIT_FAILURE);
+    }
+}
 
 /**
  * @brief Print an error to the console.
- * @param output The error to be printed.
+ * @param file The file where the error was called from.
+ * @param line The line where the error was called from.
+ * @param message The error to be printed.
  */
-void LogError(const char* output, ...)
+void _LogError(const char* file, const int line, const char* message, ...)
 {
     PrintHeader();
     PrintErrorTag();
-    PrintBody(output);
+
+    printf("%s:%d | ", file, line);
+
+    va_list argp;
+    va_start(argp, message);
+    vprintf(message, argp);
+    va_end(argp);
+    printf("\n");
+
+    exit(EXIT_FAILURE);
 }
 
 /**
  * @brief Print a warning to the console.
- * @param output The warning to be printed.
+ * @param file The file where the warning was called from.
+ * @param line The line where the warning was called from.
+ * @param message The warning to be printed.
  */
-void LogWarning(const char* output, ...)
+void _LogWarning(const char* file, const int line, const char* message, ...)
 {
     PrintHeader();
     PrintWarningTag();
-    PrintBody(output);
+    va_list argp;
+    va_start(argp, message);
+    vprintf(message, argp);
+    va_end(argp);
+    printf("\n");
 }
 
 /**
  * @brief Print info to the console.
- * @param output The info to be printed.
+ * @param file The file where the info was called from.
+ * @param line The line where the info was called from.
+ * @param message The info to be printed.
  */
-void LogInfo(const char* output, ...)
+void _LogInfo(const char* file, const int line, const char* message, ...)
 {
     PrintHeader();
     PrintInfoTag();
-    PrintBody(output);
+    va_list argp;
+    va_start(argp, message);
+    vprintf(message, argp);
+    va_end(argp);
+    printf("\n");
 }
 
 /* ----------------------------------------------------- STATICS ---------------------------------------------------- */
 
 /**
- * @brief Print the header of any logging. This contains the current timestamp.
+ * @brief Print the header of any message. This contains the current timestamp.
  */
 static void PrintHeader()
 {
@@ -58,6 +109,16 @@ static void PrintHeader()
     strftime(timeBuffer, 32, "%d-%m-%y %H:%M:%S ", &tm);
 
     vprintf(timeBuffer, NULL);
+}
+
+/**
+ * @brief Print an assert tag.
+ */
+static void PrintAssertTag()
+{
+    printf("\033[1;31m");
+    printf("[ASSERT] ");
+    printf("\033[0m");
 }
 
 /**
@@ -87,18 +148,4 @@ static void PrintInfoTag()
 {
     printf("\033[0m");
     printf("[INFO] ");
-}
-
-/**
- * @brief Print the body, the actual contents of the log.
- * @param output The log to be printed.
- */
-static void PrintBody(const char* output, ...)
-{
-    va_list argp;
-    va_start(argp, output);
-    vprintf(output, argp);
-    va_end(argp);
-
-    printf("\n");
 }

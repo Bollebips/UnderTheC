@@ -2,6 +2,7 @@
 #include "Containers/BucketArray.h"
 #include "Containers/Dictionary.h"
 #include "Logger.h"
+
 #include "Windows.h"
 #include <stdbool.h>
 #include <string.h>
@@ -319,8 +320,9 @@ int main()
     // BucketArrayTest();
     // dict_test();
 
-    LogError("test %f", 3.14);
-    LogWarning("test %f", 3.14);
+    // LogAssert(false, "test %d %f", 5, 3.1415f);
+    // LogError("test %f", 3.14f);
+    LogWarning("test %f", 3.14f);
     LogInfo("test %d", 69);
 
 
