@@ -320,10 +320,13 @@ int main()
     // BucketArrayTest();
     // dict_test();
 
-    // LogAssert(false, "test %d %f", 5, 3.1415f);
+    // _LogAssert(__FILE__, __LINE__, false);
+    LogAssert(false, "test %f p", 3.14f);
+    // LogAssert(false, "test");
+    // LogAssert(false);
     // LogError("test %f", 3.14f);
-    LogWarning("test %f", 3.14f);
-    LogInfo("test %d", 69);
+    // LogWarning("test %f", 3.14f);
+    // LogInfo("test %d", 69);
 
 
     // system("pause");

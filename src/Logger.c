@@ -15,21 +15,28 @@ static void PrintInfoTag();
  * @brief Print an error to the console if the assertion failed.
  * @param file The file where the assert was called from.
  * @param line The line where the assert was called from.
- * @param check The opperation to be asserted.
+ * @param expression The expression to be asserted.
  * @param message The error to be printed in case of a failed assert.
  */
-void _LogAssert(const char* file, const int line, const bool check, const char* message, ...)
+void _LogAssert(const char* file, const int line, const char* expression, const char* expressionString, ...)
 {
-    if(!check)
+    if(!expression)
     {
         PrintHeader();
         PrintAssertTag();
 
-        printf("%s:%d | ", file, line);
+        printf("%s:%d | %s", file, line, expressionString);
 
         va_list argp;
-        va_start(argp, message);
-        vprintf(message, argp);
+        va_start(argp, expressionString);
+        char* c = va_arg(argp, char*);
+        // c = va_arg(argp, char*);
+        // printf("%c", *c);
+        if(c != NULL)
+        {
+            printf(" | ");
+            vprintf(c, argp);
+        }
         va_end(argp);
 
         printf("\n");
