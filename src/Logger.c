@@ -16,9 +16,10 @@ static void PrintInfoTag();
  * @param file The file where the assert was called from.
  * @param line The line where the assert was called from.
  * @param expression The expression to be asserted.
+ * @param expressionString The stringified expression.
  * @param message The error to be printed in case of a failed assert.
  */
-void _LogAssert(const char* file, const int line, const char* expression, const char* expressionString, ...)
+void _LogAssert(const char* file, const int line, const bool expression, const char* expressionString, ...)
 {
     if(!expression)
     {
@@ -30,8 +31,6 @@ void _LogAssert(const char* file, const int line, const char* expression, const 
         va_list argp;
         va_start(argp, expressionString);
         char* c = va_arg(argp, char*);
-        // c = va_arg(argp, char*);
-        // printf("%c", *c);
         if(c != NULL)
         {
             printf(" | ");
