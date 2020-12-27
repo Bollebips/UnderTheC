@@ -15,5 +15,6 @@ struct Array
 };
 
 void ArrayInit(Array* array, size_t elementSize, const uint64_t initialCapacity);
+void ArrayDeinit(Array* array);
 
 #endif

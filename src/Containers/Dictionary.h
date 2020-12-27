@@ -19,11 +19,16 @@ typedef struct Element
  */
 struct Dictionary
 {
-    uint64_t capacity;                  // The number of elements in the main array of elements.
+    uint64_t num;                       // The number of occupied elements in the dictionary.
     size_t keySize;                     // Memory footprint of the key data.
     size_t valueSize;                   // Memory footprint of the value data.
     BucketArray collisionElements;      // Array of elements that collided with other elements in the main array.
-    Element elements[];                 // The main array of elements.
+    Array elements;                     // The main array of elements.
 };
+
+void DictionaryInit(Dictionary* dict, size_t keySize, size_t valueSize, const uint64_t capacity);
+void DictionaryDeinit(Dictionary* dict);
+
+size_t DictionaryGetSize(size_t keySize, size_t valueSize);
 
 #endif

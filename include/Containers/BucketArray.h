@@ -12,9 +12,13 @@ BucketArray* BucketArrayNew(const size_t elementSize, const uint64_t bucketCapac
 void* BucketArrayAdd(BucketArray* bucketArray, const void* newElement);
 void BucketArrayPopBack(BucketArray* bucketArray, void* poppedElement);
 void* BucketArrayGet(const BucketArray* bucketArray, const uint64_t index);
+void BucketArrayResize(BucketArray* bucketArray, const uint64_t numElements);
+void BucketArrayClear(BucketArray* bucketArray);
 void BucketArrayFree(BucketArray* bucketArray);
 
 uint64_t BucketArrayNum(BucketArray* bucketArray);
 uint64_t BucketArrayNumBuckets(BucketArray* bucketArray);
+uint64_t BucketArrayCapacity(BucketArray* bucketArray);
+uint64_t BucketArrayBucketCapacity(BucketArray* bucketArray);
 
 #endif

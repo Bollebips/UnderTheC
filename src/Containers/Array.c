@@ -1,12 +1,14 @@
 #include "Array.h"
 
+#include "Math/Math.h"
+#include "Logger.h"
+
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
 #include <assert.h>
 
 static const int INITIAL_CAPACITY = 16;
-static const float GOLDEN_RATIO = 1.61803398875f;
 
 /**
  * @brief Creates a new array, and initializes it.
@@ -18,8 +20,8 @@ Array* ArrayNew(size_t elementSize)
 {
     Array* newArray = (Array*) malloc(sizeof(Array));
 
-    assert(elementSize > 0);
-    assert(newArray != NULL);
+    LogAssert(elementSize > 0);
+    LogAssert(newArray != NULL);
 
     ArrayInit(newArray, elementSize, INITIAL_CAPACITY);
 
@@ -34,8 +36,8 @@ Array* ArrayNew(size_t elementSize)
  */
 void* ArrayAdd(Array* array, const void* newElement)
 {
-    assert(array != NULL);
-    assert(newElement != NULL);
+    LogAssert(array != NULL);
+    LogAssert(newElement != NULL);
 
     if(array->capacity <= array->num)   // INCREASE CAPACITY
     {
@@ -65,8 +67,8 @@ void* ArrayAdd(Array* array, const void* newElement)
  */
 void ArrayPopBack(Array* array, void* poppedElement)
 {
-    assert(array != NULL);
-    assert(array->num > 0);
+    LogAssert(array != NULL);
+    LogAssert(array->num > 0);
 
     void* lastElement = ArrayGet(array, array->num - 1);
 
@@ -89,8 +91,8 @@ void ArrayPopBack(Array* array, void* poppedElement)
  */
 void* ArrayGet(const Array* array, const uint64_t index)
 {
-    assert(array != NULL);
-    assert(index < array->num);
+    LogAssert(array != NULL);
+    LogAssert(index < array->num);
 
     return (void*) array->elements + ((index) * array->elementSize);
 }
@@ -102,11 +104,28 @@ void* ArrayGet(const Array* array, const uint64_t index)
  */
 void ArrayResize(Array* array, const uint64_t numElements)
 {
-    assert(array != NULL);
+    LogAssert(array != NULL);
+
+    if(numElements == array->num)
+    {
+        return;
+    }
 
     array->elements = realloc(array->elements, array->elementSize * (size_t) numElements);
     array->capacity = numElements;
     array->num = fmin(array->num, numElements);
+}
+
+/**
+ * @brief Remove all elements from the array. Doesn't change the array's capacity.
+ * @param array The array to be cleared.
+ */
+void ArrayClear(Array* array)
+{
+    LogAssert(array != NULL);
+
+    memset(array->elements, 0, array->elementSize * array->capacity);
+    array->num = 0;
 }
 
 /**
@@ -115,9 +134,9 @@ void ArrayResize(Array* array, const uint64_t numElements)
  */
 void ArrayFree(Array* array)
 {
-    assert(array != NULL);
+    LogAssert(array != NULL);
 
-    free(array->elements);
+    ArrayDeinit(array);
     free(array);
 }
 
@@ -128,7 +147,7 @@ void ArrayFree(Array* array)
  */
 uint64_t ArrayNum(const Array* array)
 {
-    assert(array != NULL);
+    LogAssert(array != NULL);
     return array->num;
 }
 
@@ -139,7 +158,7 @@ uint64_t ArrayNum(const Array* array)
  */
 uint64_t ArrayCapacity(const Array* array)
 {
-    assert(array != NULL);
+    LogAssert(array != NULL);
     return array->capacity;
 }
 
@@ -153,11 +172,22 @@ uint64_t ArrayCapacity(const Array* array)
  */
 void ArrayInit(Array* array, size_t elementSize, const uint64_t initialCapacity)
 {
-    assert(array != NULL);
-    assert(elementSize > 0);
+    LogAssert(array != NULL);
+    LogAssert(elementSize > 0);
 
     array->num = 0;
     array->capacity = initialCapacity;
     array->elementSize = elementSize;
     array->elements = calloc(initialCapacity, elementSize);
+}
+
+/**
+ * @brief Deinitialize the array. This does not free the array pointer. Use this function instead of free if the array is stack allocated or allocated locally as a struct member.
+ * @param array The array to deinitialize.
+ */
+void ArrayDeinit(Array* array)
+{
+    LogAssert(array != NULL);
+
+    free(array->elements);
 }

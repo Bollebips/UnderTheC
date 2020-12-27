@@ -9,12 +9,13 @@
  */
 struct BucketArray
 {
-    uint64_t num;               // The maximum number of occupied elements before the array has to allocate more memory.
+    uint64_t num;               // The number of elements present in the bucketArray.
     uint64_t bucketCapacity;    // The maximum number of elements per bucket.
     size_t elementSize;         // The memory footprint of 1 element.
     Array bucketPtrs;           // A collection of pointers to the different buckets.
 };
 
 void BucketArrayInit(BucketArray* bucketArray, const size_t elementSize, const uint64_t bucketCapacity);
+void BucketArrayDeinit(BucketArray* bucketArray);
 
 #endif

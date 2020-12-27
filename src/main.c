@@ -318,10 +318,10 @@ int main()
 {
     // array_test();
     // BucketArrayTest();
-    // dict_test();
+    dict_test();
 
     // _LogAssert(__FILE__, __LINE__, false);
-    LogAssert(false, "test %f p", 3.14f);
+    // LogAssert(false, "test %f p", 3.14f);
     // LogAssert(false, "test");
     // LogAssert(false);
     // LogError("test %f", 3.14f);

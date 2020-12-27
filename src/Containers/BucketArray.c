@@ -1,10 +1,12 @@
 #include "BucketArray.h"
 
+#include "Logger.h"
+
 #include <assert.h>
 #include <string.h>
 #include <math.h>
 
-static void BucketArrayAddBucket(BucketArray* bucketArray);
+static void* BucketArrayAddBucket(BucketArray* bucketArray);
 static void BucketArrayPopBackBucket(BucketArray* bucketArray);
 
 /**
@@ -17,9 +19,9 @@ BucketArray* BucketArrayNew(const size_t elementSize, const uint64_t bucketCapac
 {
     BucketArray* newBucketArray = malloc(sizeof(BucketArray));
 
-    assert(newBucketArray != NULL);
-    assert(elementSize > 0);
-    assert(bucketCapacity > 0);
+    LogAssert(newBucketArray != NULL);
+    LogAssert(elementSize > 0);
+    LogAssert(bucketCapacity > 0);
 
     BucketArrayInit(newBucketArray, elementSize, bucketCapacity);
 
@@ -34,8 +36,8 @@ BucketArray* BucketArrayNew(const size_t elementSize, const uint64_t bucketCapac
  */
 void* BucketArrayAdd(BucketArray* bucketArray, const void* newElement)
 {
-    assert(bucketArray != NULL);
-    assert(newElement != NULL);
+    LogAssert(bucketArray != NULL);
+    LogAssert(newElement != NULL);
 
     if(bucketArray->num >= ArrayNum(&(bucketArray->bucketPtrs)) * bucketArray->bucketCapacity)
     {
@@ -49,7 +51,7 @@ void* BucketArrayAdd(BucketArray* bucketArray, const void* newElement)
 
     void* result = memcpy(locationToSet, newElement, bucketArray->elementSize);
 
-    assert(result != NULL);
+    LogAssert(result != NULL);
 
     bucketArray->num++;
 
@@ -63,8 +65,8 @@ void* BucketArrayAdd(BucketArray* bucketArray, const void* newElement)
  */
 void BucketArrayPopBack(BucketArray* bucketArray, void* poppedElement)
 {
-    assert(bucketArray != NULL);
-    assert(bucketArray->num > 0);
+    LogAssert(bucketArray != NULL);
+    LogAssert(bucketArray->num > 0);
 
     void* lastElement = BucketArrayGet(bucketArray, bucketArray->num - 1);
 
@@ -96,8 +98,8 @@ void BucketArrayPopBack(BucketArray* bucketArray, void* poppedElement)
  */
 void* BucketArrayGet(const BucketArray* bucketArray, const uint64_t index)
 {
-    assert(bucketArray != NULL);
-    assert(index < bucketArray->num);
+    LogAssert(bucketArray != NULL);
+    LogAssert(index < bucketArray->num);
 
     uint64_t bucketIndex = floor((float) index / (float) bucketArray->bucketCapacity);
     uint64_t indexInBucket = index % bucketArray->bucketCapacity;
@@ -109,7 +111,51 @@ void* BucketArrayGet(const BucketArray* bucketArray, const uint64_t index)
     return result;
 }
 
-// TODO: BucketArrayResize(BucketArray* bucketArray, const uint64_t numElements)
+/**
+ * @brief Resize the bucketArray. If the new size is smaller than the previous size, the excess elements will be discarded.
+ * @param bucketArray The bucketArray to be resized.
+ * @param numElements The new number of elements for the bucketArray to occupy.
+ */
+void BucketArrayResize(BucketArray* bucketArray, const uint64_t numElements)
+{
+    LogAssert(bucketArray != NULL);
+
+    uint64_t numBuckets = floor((float) numElements / (float) bucketArray->bucketCapacity);
+    // uint64_t numElementsInLastBucket = numElements % bucketArray->bucketCapacity;
+
+    int prevNumCurrentNumDiff = abs(bucketArray->num - numBuckets);
+
+    if(bucketArray->num > numBuckets)
+    {
+        for(int i = 0; i < prevNumCurrentNumDiff; ++i)
+        {
+            BucketArrayPopBackBucket(bucketArray);
+        }
+    }
+    else if(bucketArray->num < numBuckets)
+    {
+        for(int i = 0; i < prevNumCurrentNumDiff; ++i)
+        {
+            BucketArrayAddBucket(bucketArray);
+        }
+    }
+
+    bucketArray->num = fmin(bucketArray->num, numElements);
+}
+
+/**
+ * @brief Remove all elements the bucketArray. Doesn't change the capacity of the bucketArray.
+ * @param bucketArray The bucketArray to be cleared.
+ */
+void BucketArrayClear(BucketArray* bucketArray)
+{
+    LogAssert(bucketArray != NULL);
+
+    for(int i = 0; i < ArrayNum(&(bucketArray->bucketPtrs)); i++)
+    {
+        memset(ArrayGet(&(bucketArray->bucketPtrs), 0), 0, bucketArray->bucketCapacity);
+    }
+}
 
 /**
  * @brief Free the bucketArray.
@@ -117,14 +163,9 @@ void* BucketArrayGet(const BucketArray* bucketArray, const uint64_t index)
  */
 void BucketArrayFree(BucketArray* bucketArray)
 {
-    assert(bucketArray != NULL);
+    LogAssert(bucketArray != NULL);
 
-    for(int i = 0; i < ArrayNum(&(bucketArray->bucketPtrs)); i++)
-    {
-        free(ArrayGet(&(bucketArray->bucketPtrs), i));
-    }
-
-    ArrayFree(&(bucketArray->bucketPtrs));
+    BucketArrayDeinit(bucketArray);
 
     free(bucketArray);
 }
@@ -149,6 +190,16 @@ uint64_t BucketArrayNumBuckets(BucketArray* bucketArray)
     return ArrayNum(&(bucketArray->bucketPtrs));
 }
 
+uint64_t BucketArrayCapacity(BucketArray* bucketArray)
+{
+    return bucketArray->bucketCapacity * ArrayCapacity(&(bucketArray->bucketPtrs));
+}
+
+uint64_t BucketArrayBucketCapacity(BucketArray* bucketArray)
+{
+    return bucketArray->bucketCapacity;
+}
+
 /* ---------------------------------------------------- Internal ---------------------------------------------------- */
 
 /**
@@ -159,8 +210,8 @@ uint64_t BucketArrayNumBuckets(BucketArray* bucketArray)
  */
 void BucketArrayInit(BucketArray* bucketArray, const size_t elementSize, const uint64_t bucketCapacity)
 {
-    assert(bucketArray != NULL);
-    assert(elementSize > 0);
+    LogAssert(bucketArray != NULL);
+    LogAssert(elementSize > 0);
 
     bucketArray->elementSize = elementSize;
     bucketArray->num = 0;
@@ -171,16 +222,36 @@ void BucketArrayInit(BucketArray* bucketArray, const size_t elementSize, const u
     BucketArrayAddBucket(bucketArray);
 }
 
+/**
+ * @brief Deinitialize the bucketArray. This does not free the bucketArray pointer. Use this function instead of free if the bucketArray is stack allocated or allocated locally as a struct member.
+ * @param bucketArray The bucketArray to deinitialize.
+ */
+void BucketArrayDeinit(BucketArray* bucketArray)
+{
+    LogAssert(bucketArray != NULL);
+
+    for(int i = 0; i < ArrayNum(&(bucketArray->bucketPtrs)); i++)
+    {
+        void* memoryToFree = *(void**) ArrayGet(&(bucketArray->bucketPtrs), i);
+        LogAssert(memoryToFree != NULL);
+        free(memoryToFree);
+    }
+
+    ArrayDeinit(&(bucketArray->bucketPtrs));
+}
+
 /* ----------------------------------------------------- Private ---------------------------------------------------- */
 
 /**
  * @brief Add a new bucket to the bucketArray.
  * @param bucketArray The bucketArray to add the bucket to.
+ * @return void* A pointer to the newly added bucket.
  */
-static void BucketArrayAddBucket(BucketArray* bucketArray)
+static void* BucketArrayAddBucket(BucketArray* bucketArray)
 {
     void* newBucket = calloc(bucketArray->bucketCapacity, bucketArray->elementSize);
     ArrayAdd(&(bucketArray->bucketPtrs), &newBucket);
+    return newBucket;
 }
 
 /**
@@ -189,11 +260,11 @@ static void BucketArrayAddBucket(BucketArray* bucketArray)
  */
 static void BucketArrayPopBackBucket(BucketArray* bucketArray)
 {
-    assert(bucketArray != NULL);
-    assert(bucketArray->num > 0);
+    LogAssert(bucketArray != NULL);
+    LogAssert(bucketArray->num > 0);
 
-    void* lastElement;
-    ArrayPopBack(&(bucketArray->bucketPtrs), &lastElement);
+    void* bucket;
+    ArrayPopBack(&(bucketArray->bucketPtrs), &bucket);
 
-    free(lastElement);
+    free(bucket);
 }
