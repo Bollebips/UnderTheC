@@ -2,6 +2,7 @@
 
 #include "Math/Math.h"
 #include "Logger.h"
+#include <inttypes.h>
 
 #include <stdio.h>
 #include <string.h>
@@ -32,9 +33,10 @@ static void ElementSet(Element* element, Element* nextElement, bool isOccupied, 
  * @param capacity The number of elements available in the main array. Although the total amount of elements in the dictionary can be limitless, the capacity of the dictionary should be large enough for performace reasons.
  * @return Dictionary* A pointer to the newly created dictionary.
  */
-Dictionary* DictionaryNew(size_t keySize, size_t valueSize, const uint64_t capacity)
+Dictionary* DictionaryNew(size_t keySize, size_t valueSize)
 {
-    // TODO: Get rid of the capacity paramater, and make the dictionary increase size dynamically by rehashing.
+    LogAssert(keySize > 0);
+    LogAssert(valueSize > 0);
 
     Dictionary* newDictionary = malloc(sizeof(Dictionary));
 
@@ -56,6 +58,16 @@ Dictionary* DictionaryNew(size_t keySize, size_t valueSize, const uint64_t capac
  */
 void* DictionaryAdd(Dictionary* dict, const void* key, const void* value)
 {
+    LogAssert(dict != NULL);
+    LogAssert(key != NULL);
+    LogAssert(value != NULL);
+
+    float loadFactor = DictionaryNum(dict) / ArrayCapacity(&(dict->elements));
+    if(loadFactor >= MAX_LOAD_FACTOR)
+    {
+        DictionaryResize(dict, ArrayCapacity(&(dict->elements)) * GOLDEN_RATIO);
+    }
+
     uint64_t hash = HashKey(key, dict->keySize);
     uint64_t index = hash % ArrayCapacity(&(dict->elements));
 
@@ -172,8 +184,15 @@ void* DictionaryGet(const Dictionary* dict, const void* key)
     return NULL;
 }
 
-void DictionaryResize(Dictionary* dict, const uint64_t capacity)
+void DictionaryResize(Dictionary* dict, const uint64_t newCapacity)
 {
+    LogAssert(dict != NULL);
+
+    if(newCapacity == dict->elements.capacity)
+    {
+        return;
+    }
+
     char prevElements[ElementSize(dict) * DictionaryNum(dict)];
 
     void* prevElement = &prevElements;
@@ -189,7 +208,7 @@ void DictionaryResize(Dictionary* dict, const uint64_t capacity)
         }
     }
 
-    for(int i = 0; i < BucketArrayCapacity(&(dict->collisionElements)); i++)
+    for(int i = 0; i < BucketArrayNum(&(dict->collisionElements)); i++)
     {
         Element* e = (Element*) BucketArrayGet(&(dict->collisionElements), i);
 
@@ -200,20 +219,21 @@ void DictionaryResize(Dictionary* dict, const uint64_t capacity)
         }
     }
 
-    unsigned int newCapacity = ArrayCapacity(&(dict->elements)) * GOLDEN_RATIO;
-
     ArrayClear(&(dict->elements));
     ArrayResize(&(dict->elements), newCapacity);
-    dict->elements.num = newCapacity;
+    Element emptyElement;
+    memset(&emptyElement, 0, ElementSize(dict));
+    ArrayFill(&(dict->elements), &emptyElement);
 
     BucketArrayClear(&(dict->collisionElements));
     BucketArrayResize(&(dict->collisionElements), ceil(newCapacity * (1.0f - MAX_LOAD_FACTOR)));
 
     uint64_t prevDictNum = dict->num;
+    dict->num = 0;
 
-    for(int i = 0; i < DictionaryNum(dict); i++)
+    for(int i = 0; i < prevDictNum; i++)
     {
-        Element* e = (Element*) &prevElements + (ElementSize(dict) * i);
+        Element* e = (Element*) (prevElements + (ElementSize(dict) * i));
         DictionaryAdd(dict, ElementKey(e), ElementValue(e, dict->keySize));
     }
 
@@ -234,6 +254,7 @@ void DictionaryFree(Dictionary* dict)
 
 uint64_t DictionaryNum(const Dictionary* dict)
 {
+    LogAssert(dict != NULL);
     return dict->num;
 }
 
@@ -248,11 +269,18 @@ uint64_t DictionaryNum(const Dictionary* dict)
  */
 void DictionaryInit(Dictionary* dict, size_t keySize, size_t valueSize, const uint64_t capacity)
 {
+    LogAssert(dict != NULL);
+    LogAssert(keySize > 0);
+    LogAssert(valueSize > 0);
+
     dict->keySize = keySize;
     dict->valueSize = valueSize;
+    dict->num = 0;
 
-    ArrayInit(&(dict->elements), ElementSize(dict), capacity);
-    dict->elements.num = capacity;
+    ArrayInit(&(dict->elements), ElementSize(dict), (uint64_t) (capacity / MAX_LOAD_FACTOR));
+    Element* emptyElement = malloc(ElementSize(dict));
+    memset(emptyElement, 0, ElementSize(dict));
+    ArrayFill(&(dict->elements), emptyElement);
 
     BucketArrayInit(&(dict->collisionElements), ElementSize(dict), ceil(capacity * (1.0f - MAX_LOAD_FACTOR)));
 }
@@ -269,19 +297,6 @@ void DictionaryDeinit(Dictionary* dict)
     BucketArrayDeinit(&(dict->collisionElements));
 }
 
-/**
- * @brief Get the memory footprint of a specific dictionary.
- * @param keySize The memory footprint of the key data.
- * @param valueSize The memory footprint of the value data.
- * @param capacity The number of elements available in the main array.
- * @return size_t The memory footprint of this dictionary.
- */
-size_t DictionaryGetSize(size_t keySize, size_t valueSize)
-{
-    // return sizeof(Dictionary) * (sizeof(Element*) + sizeof(bool) + keySize + valueSize);
-    return 0;
-}
-
 /* ----------------------------------------------------- STATICS ---------------------------------------------------- */
 
 /**
@@ -294,6 +309,11 @@ size_t DictionaryGetSize(size_t keySize, size_t valueSize)
  */
 static Element* AddCollidingElement(Dictionary* dict, Element* prevElement, const void* key, const void* value)
 {
+    LogAssert(dict != NULL);
+    LogAssert(prevElement != NULL);
+    LogAssert(key != NULL);
+    LogAssert(value != NULL);
+
     Element* nextElement = ElementNextElement(prevElement);
     if(nextElement == NULL)
     {
@@ -360,9 +380,7 @@ static void RemoveCollidingElement(Dictionary* dict, Element* prevElement, const
     }
     else
     {
-        // !! THIS SHOULD NEVER HAPPEN !!
-        // The requested key is not present in the dictionary.
-        return;
+        LogError("Element has pointer to next element, but the next element is not occupied.");
     }
 }
 
@@ -376,6 +394,7 @@ static void RemoveCollidingElement(Dictionary* dict, Element* prevElement, const
 static Element* GetCollidingElement(const Dictionary* dict, Element* prevElement, const void* key)
 {
     LogAssert(dict);
+    LogAssert(prevElement);
     LogAssert(key);
 
     Element* nextElement = ElementNextElement(prevElement);
@@ -395,7 +414,7 @@ static Element* GetCollidingElement(const Dictionary* dict, Element* prevElement
     }
     else
     {
-        // The requested key is not present in the dictionary.
+        LogError("Element has pointer to next element, but the next element is not occupied.");
         return NULL;
     }
 
@@ -410,6 +429,9 @@ static Element* GetCollidingElement(const Dictionary* dict, Element* prevElement
  */
 static uint64_t HashKey(const void* key, const size_t keySize)
 {
+    LogAssert(key != NULL);
+    LogAssert(keySize > 0);
+
     uint8_t* keyBytes = (uint8_t*) key; // The data gets converted to an array of uint8.
 
     uint64_t hash = HASH_OFFSET;
@@ -430,6 +452,7 @@ static uint64_t HashKey(const void* key, const size_t keySize)
  */
 static size_t ElementSize(const Dictionary* dict)
 {
+    LogAssert(dict != NULL);
     return sizeof(Element*) + sizeof(bool) + dict->keySize + dict->valueSize; // DictElement: next_element (in case of collision), bool (wether or not the element is used), key, value
 }
 
@@ -441,7 +464,6 @@ static size_t ElementSize(const Dictionary* dict)
 static Element* ElementNextElement(const Element* element)
 {
     LogAssert(element != NULL);
-
     return element->nextElement;
 }
  /**
@@ -452,7 +474,6 @@ static Element* ElementNextElement(const Element* element)
 static bool ElementIsOccupied(const Element* element)
 {
     LogAssert(element != NULL);
-
     return element->isOccupied;
 }
 
@@ -464,7 +485,6 @@ static bool ElementIsOccupied(const Element* element)
 static void* ElementKey(const Element* element)
 {
     LogAssert(element != NULL);
-
     return (void*) &(element->keyValuePair);
 }
 

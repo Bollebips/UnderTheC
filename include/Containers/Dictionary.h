@@ -9,11 +9,11 @@
 */
 typedef struct Dictionary Dictionary;
 
-Dictionary* DictionaryNew(const size_t keySize, const size_t valueSize, const uint64_t capacity);
+Dictionary* DictionaryNew(const size_t keySize, const size_t valueSize);
 void* DictionaryAdd(Dictionary* dict, const void* key, const void* value);
 void DictionaryRemove(Dictionary* dict, const void* key);
 void* DictionaryGet(const Dictionary* dict, const void* key);
-void DictionaryResize(Dictionary* dict, const uint64_t capacity);
+void DictionaryResize(Dictionary* dict, const uint64_t newCapacity);
 void DictionaryFree(Dictionary* dict);
 
 uint64_t DictionaryNum(const Dictionary* dict);

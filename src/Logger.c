@@ -76,6 +76,9 @@ void _LogWarning(const char* file, const int line, const char* message, ...)
 {
     PrintHeader();
     PrintWarningTag();
+
+    printf("%s:%d | ", file, line);
+
     va_list argp;
     va_start(argp, message);
     vprintf(message, argp);
@@ -93,6 +96,9 @@ void _LogInfo(const char* file, const int line, const char* message, ...)
 {
     PrintHeader();
     PrintInfoTag();
+
+    printf("%s:%d | ", file, line);
+
     va_list argp;
     va_start(argp, message);
     vprintf(message, argp);

@@ -18,6 +18,8 @@ static const int INITIAL_CAPACITY = 16;
  */
 Array* ArrayNew(size_t elementSize)
 {
+    LogAssert(elementSize > 0);
+
     Array* newArray = (Array*) malloc(sizeof(Array));
 
     LogAssert(elementSize > 0);
@@ -41,15 +43,12 @@ void* ArrayAdd(Array* array, const void* newElement)
 
     if(array->capacity <= array->num)   // INCREASE CAPACITY
     {
-        if(array->capacity <= 0)
+        int newCapacity = 1;
+        if(array->capacity > 0)
         {
-            array->capacity = 1;
+            newCapacity = (int) round((float) array->capacity * GOLDEN_RATIO);
         }
-        else
-        {
-            int newCapacity = (int) round((float) array->capacity * GOLDEN_RATIO);
-            ArrayResize(array, newCapacity);
-        }
+        ArrayResize(array, newCapacity);
     }
 
     void* locationToSet = array->elements + ((size_t) array->num * array->elementSize);
@@ -100,20 +99,38 @@ void* ArrayGet(const Array* array, const uint64_t index)
 /**
  * @brief Resize the array. If the new size is smaller than the previous size, the excess elements will be discarded. If the new size is bigger than the previous size, old pointers to elements might become corrupt.
  * @param array The array to resize.
- * @param numElements The new number of elements for the array to occupy.
+ * @param newCapacity The new number of elements the array can occupy before having to allocate more memory.
  */
-void ArrayResize(Array* array, const uint64_t numElements)
+void ArrayResize(Array* array, const uint64_t newCapacity)
 {
     LogAssert(array != NULL);
 
-    if(numElements == array->num)
+    if(newCapacity == array->capacity)
     {
         return;
     }
 
-    array->elements = realloc(array->elements, array->elementSize * (size_t) numElements);
-    array->capacity = numElements;
-    array->num = fmin(array->num, numElements);
+    array->elements = realloc(array->elements, array->elementSize * (size_t) newCapacity);
+    array->capacity = newCapacity;
+    array->num = fmin(array->num, newCapacity);
+}
+
+/**
+ * @brief Fill the whole array with values until its capacity is reached. This will override values already present in the array.
+ * @param array The array to fill.
+ * @param value The value to fill the array with.
+ */
+void ArrayFill(Array* array, void* value)
+{
+    LogAssert(array != NULL);
+    LogAssert(value != NULL);
+
+    for(int i = 0; i < array->capacity; ++i)
+    {
+        memcpy(array->elements + (i * array->elementSize), value, array->elementSize);
+    }
+
+    array->num = array->capacity;
 }
 
 /**
@@ -162,7 +179,7 @@ uint64_t ArrayCapacity(const Array* array)
     return array->capacity;
 }
 
-/* ------------------------------------------------------------------------------------------------------------------ */
+/* ---------------------------------------------------- INTERNALS --------------------------------------------------- */
 
 /**
  * @brief Initialize an existing array. Only used internally. When calling ArrayNew, the array will already be initialized.
@@ -188,6 +205,5 @@ void ArrayInit(Array* array, size_t elementSize, const uint64_t initialCapacity)
 void ArrayDeinit(Array* array)
 {
     LogAssert(array != NULL);
-
     free(array->elements);
 }

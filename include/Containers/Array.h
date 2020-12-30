@@ -13,7 +13,8 @@ Array* ArrayNew(size_t elementSize);
 void* ArrayAdd(Array* array, const void* newElement);
 void ArrayPopBack(Array* array, void* poppedElement);
 void* ArrayGet(const Array* array, const uint64_t index);
-void ArrayResize(Array* array, const uint64_t numElements);
+void ArrayResize(Array* array, const uint64_t newCapacity);
+void ArrayFill(Array* array, void* value);
 void ArrayClear(Array* array);
 void ArrayFree(Array* array);
 

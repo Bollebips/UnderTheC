@@ -17,6 +17,9 @@ static void BucketArrayPopBackBucket(BucketArray* bucketArray);
  */
 BucketArray* BucketArrayNew(const size_t elementSize, const uint64_t bucketCapacity)
 {
+    LogAssert(elementSize > 0);
+    LogAssert(bucketCapacity > 0);
+
     BucketArray* newBucketArray = malloc(sizeof(BucketArray));
 
     LogAssert(newBucketArray != NULL);
@@ -114,33 +117,46 @@ void* BucketArrayGet(const BucketArray* bucketArray, const uint64_t index)
 /**
  * @brief Resize the bucketArray. If the new size is smaller than the previous size, the excess elements will be discarded.
  * @param bucketArray The bucketArray to be resized.
- * @param numElements The new number of elements for the bucketArray to occupy.
+ * @param newCapacity The new number of elements the bucketArray can occupy before having to allocate more memory.
  */
-void BucketArrayResize(BucketArray* bucketArray, const uint64_t numElements)
+void BucketArrayResize(BucketArray* bucketArray, const uint64_t newCapacity)
 {
     LogAssert(bucketArray != NULL);
 
-    uint64_t numBuckets = floor((float) numElements / (float) bucketArray->bucketCapacity);
-    // uint64_t numElementsInLastBucket = numElements % bucketArray->bucketCapacity;
-
-    int prevNumCurrentNumDiff = abs(bucketArray->num - numBuckets);
-
-    if(bucketArray->num > numBuckets)
+    if(newCapacity == BucketArrayCapacity(bucketArray))
     {
-        for(int i = 0; i < prevNumCurrentNumDiff; ++i)
+        return;
+    }
+
+    uint64_t numBuckets = ceil((float) newCapacity / (float) bucketArray->bucketCapacity);
+
+    int prevNumBucketsCurrentNumBucketsDiff = abs(bucketArray->bucketPtrs.num - numBuckets);
+
+    if(bucketArray->bucketPtrs.num > numBuckets)
+    {
+        for(int i = 0; i < prevNumBucketsCurrentNumBucketsDiff; ++i)
         {
             BucketArrayPopBackBucket(bucketArray);
         }
     }
-    else if(bucketArray->num < numBuckets)
+    else if(bucketArray->bucketPtrs.num < numBuckets)
     {
-        for(int i = 0; i < prevNumCurrentNumDiff; ++i)
+        for(int i = 0; i < prevNumBucketsCurrentNumBucketsDiff; ++i)
         {
             BucketArrayAddBucket(bucketArray);
         }
     }
 
-    bucketArray->num = fmin(bucketArray->num, numElements);
+    ArrayResize(&(bucketArray->bucketPtrs), numBuckets);
+
+    if(numBuckets > 0)
+    {
+        uint64_t numElementsInLastBucket = newCapacity % bucketArray->bucketCapacity;
+        void* lastBucket = *(void**) ArrayGet(&(bucketArray->bucketPtrs), ArrayNum(&(bucketArray->bucketPtrs)) - 1);
+        memset(lastBucket + (numElementsInLastBucket * bucketArray->elementSize), 0, bucketArray->bucketCapacity - numElementsInLastBucket);
+    }
+
+    bucketArray->num = fmin(bucketArray->num, newCapacity);
 }
 
 /**
@@ -153,8 +169,11 @@ void BucketArrayClear(BucketArray* bucketArray)
 
     for(int i = 0; i < ArrayNum(&(bucketArray->bucketPtrs)); i++)
     {
-        memset(ArrayGet(&(bucketArray->bucketPtrs), 0), 0, bucketArray->bucketCapacity);
+        void* bucket = *(void**) ArrayGet(&(bucketArray->bucketPtrs), i);
+        memset(bucket, 0, bucketArray->bucketCapacity);
     }
+
+    bucketArray->num = 0;
 }
 
 /**
@@ -177,6 +196,7 @@ void BucketArrayFree(BucketArray* bucketArray)
  */
 uint64_t BucketArrayNum(BucketArray* bucketArray)
 {
+    LogAssert(bucketArray != NULL);
     return bucketArray->num;
 }
 
@@ -187,16 +207,29 @@ uint64_t BucketArrayNum(BucketArray* bucketArray)
  */
 uint64_t BucketArrayNumBuckets(BucketArray* bucketArray)
 {
+    LogAssert(bucketArray != NULL);
     return ArrayNum(&(bucketArray->bucketPtrs));
 }
 
+/**
+ * @brief Get the maximum number of elements the bucketArray can store, before having to allocate more memory.
+ * @param bucketArray The bucketArray to get the capacity from.
+ * @return uint64_t The capacity of the bucketArray.
+ */
 uint64_t BucketArrayCapacity(BucketArray* bucketArray)
 {
-    return bucketArray->bucketCapacity * ArrayCapacity(&(bucketArray->bucketPtrs));
+    LogAssert(bucketArray != NULL);
+    return bucketArray->bucketCapacity * ArrayNum(&(bucketArray->bucketPtrs));
 }
 
+/**
+ * @brief Get the maximum number of elements a single bucket from this bucketArray can store.
+ * @param bucketArray The bucketArray to get the bucket capacity from.
+ * @return uint64_t The bucket capacity of the bucketArray.
+ */
 uint64_t BucketArrayBucketCapacity(BucketArray* bucketArray)
 {
+    LogAssert(bucketArray != NULL);
     return bucketArray->bucketCapacity;
 }
 
@@ -212,6 +245,7 @@ void BucketArrayInit(BucketArray* bucketArray, const size_t elementSize, const u
 {
     LogAssert(bucketArray != NULL);
     LogAssert(elementSize > 0);
+    LogAssert(bucketCapacity > 0);
 
     bucketArray->elementSize = elementSize;
     bucketArray->num = 0;
@@ -249,6 +283,8 @@ void BucketArrayDeinit(BucketArray* bucketArray)
  */
 static void* BucketArrayAddBucket(BucketArray* bucketArray)
 {
+    LogAssert(bucketArray != NULL);
+
     void* newBucket = calloc(bucketArray->bucketCapacity, bucketArray->elementSize);
     ArrayAdd(&(bucketArray->bucketPtrs), &newBucket);
     return newBucket;

@@ -181,7 +181,12 @@ void array_test()
 
 void dict_test()
 {
-    Dictionary* newDict = DictionaryNew(sizeof(test_key), sizeof(test), 5);
+    printf("Hello2");
+
+    // Dictionary* newDict = DictionaryNew(sizeof(test_key), sizeof(test));
+    Dictionary* newDict = DictionaryNew(sizeof(uint64_t[10]), sizeof(uint64_t));
+
+    printf("World");
 
     test tester;
     tester.i1 = 9;
@@ -318,14 +323,15 @@ int main()
 {
     // array_test();
     // BucketArrayTest();
-    dict_test();
+    // printf("Hello");
+    // dict_test();
 
     // _LogAssert(__FILE__, __LINE__, false);
     // LogAssert(false, "test %f p", 3.14f);
     // LogAssert(false, "test");
     // LogAssert(false);
-    // LogError("test %f", 3.14f);
-    // LogWarning("test %f", 3.14f);
+    // LogError("test");
+    LogWarning("test");
     // LogInfo("test %d", 69);
 
 
