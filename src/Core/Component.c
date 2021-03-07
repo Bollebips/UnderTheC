@@ -1,6 +1,8 @@
 #include "Component.h"
 
-uint64_t ComponentGetID(const void* componentID)
+uint64_t ComponentGetID(const void* component)
 {
-    return *(ComponentID*) componentID;
+    // return *(ComponentID*) componentID;
+    Component* c = (Component*) component;
+    return c->entity;
 }

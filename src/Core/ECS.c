@@ -30,8 +30,9 @@ ComponentTypeID ECSRegisterComponent(ECS* ecs, char* componentName, size_t compo
     {
         Scene* scene = ArrayGet(&(ecs->Scenes), i);
 
-        Array* componentArray = ArrayNew(componentSize); //TODO: hardcoded bucketsize 16
-        DictionaryAdd(&(scene->components), &componentTypeID, componentArray);
+        // Array* componentArray = ArrayNew(componentSize);
+        SparseSet* componentSparseSet = SparseSetNew(componentSize, ComponentGetID, 16); //TODO: hardcoded bucketsize 16
+        DictionaryAdd(&(scene->components), &componentTypeID, componentSparseSet);
     }
 
     return componentTypeID;
@@ -48,9 +49,10 @@ ComponentID ECSAddComponent(ECS* ecs, ComponentTypeID componentTypeID, void* com
 
     Component* c = component;
     c->componentID = nextComponentID;
+    c->entity = entity;
 
-    Array* componentSparseSet = DictionaryGet(&(scene->components), &componentTypeID);
-    ArrayAdd(componentSparseSet, component);
+    SparseSet* componentSparseSet = DictionaryGet(&(scene->components), &componentTypeID);
+    SparseSetAdd(componentSparseSet, component);
 
     BucketArray* entities = SparseSetGetDenseData(&(scene->entities));
 
@@ -91,6 +93,25 @@ Entity ECSAddEntity(ECS* ecs, Scene* sceneToAddEntityTo)
 
 void ECSUpdate(ECS* ecs, Scene* scene)//TODO: remove scene argument
 {
+    // for(int i = 0; i < ArrayNum(&(ecs->systems)); ++i)
+    // {
+    //     System* system = ArrayGet(&(ecs->systems), i);
+
+    //     for(int sc = 0; sc < ArrayNum(&(ecs->ComponentTypeIDs)); ++sc)
+    //     {
+    //         ComponentTypeID* componentTypeID = ArrayGet(&(ecs->ComponentTypeIDs), sc);
+    //         Array* components = DictionaryGet(&(scene->components), componentTypeID);
+    //         // BucketArray* denseComponents = SparseSetGetDenseData(sparseComponents);
+
+    //         for(int c = 0; c < ArrayNum(components); ++c)
+    //         {
+    //             int numComponents = ArrayNum(&(system->componentsToUpdate));
+    //             void* component = ArrayGet(components, c);
+    //             system->updateFunction(numComponents, component);
+    //         }
+    //     }
+    // }
+
     for(int i = 0; i < ArrayNum(&(ecs->systems)); ++i)
     {
         System* system = ArrayGet(&(ecs->systems), i);
@@ -98,13 +119,13 @@ void ECSUpdate(ECS* ecs, Scene* scene)//TODO: remove scene argument
         for(int sc = 0; sc < ArrayNum(&(ecs->ComponentTypeIDs)); ++sc)
         {
             ComponentTypeID* componentTypeID = ArrayGet(&(ecs->ComponentTypeIDs), sc);
-            Array* components = DictionaryGet(&(scene->components), componentTypeID);
-            // BucketArray* denseComponents = SparseSetGetDenseData(sparseComponents);
+            SparseSet* sparseComponents = DictionaryGet(&(scene->components), componentTypeID);
+            BucketArray* denseComponents = SparseSetGetDenseData(sparseComponents);
 
-            for(int c = 0; c < ArrayNum(components); ++c)
+            for(int c = 0; c < BucketArrayNum(denseComponents); ++c)
             {
                 int numComponents = ArrayNum(&(system->componentsToUpdate));
-                void* component = ArrayGet(components, c);
+                void* component = BucketArrayGet(denseComponents, c);
                 system->updateFunction(numComponents, component);
             }
         }

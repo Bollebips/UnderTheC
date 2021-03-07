@@ -54,8 +54,8 @@ void SceneInit(Scene* scene)
 
     nextEntityID = 0;
 
-    // DictionaryInit(&(scene->components), sizeof(ComponentTypeID), sizeof(SparseSet));
-    DictionaryInit(&(scene->components), sizeof(ComponentTypeID), sizeof(Array));
+    DictionaryInit(&(scene->components), sizeof(ComponentTypeID), sizeof(SparseSet));
+    // DictionaryInit(&(scene->components), sizeof(ComponentTypeID), sizeof(Array));
     SparseSetInit(&(scene->entities), sizeof(Entity), EntityGetID, 16);
 }
 

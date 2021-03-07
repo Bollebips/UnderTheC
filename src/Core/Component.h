@@ -11,6 +11,7 @@ struct Component
 {
     ComponentTypeID componentTypeID;
     ComponentID componentID;
+    Entity entity;
 };
 
 uint64_t ComponentGetID(const void* componentID);
