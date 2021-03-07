@@ -2,22 +2,20 @@
 
 #include "Math/Math.h"
 #include "Logger.h"
-#include <inttypes.h>
+#include "Utils/Hash.h"
 
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
 #include <math.h>
 
 static const int INITIAL_CAPACITY = 16;
-static const uint64_t HASH_PRIME = 1099511628211U; // 2^40 + 2^8 + 0xb3
-static const uint64_t HASH_OFFSET = 14695981039346656037U;
 static const float MAX_LOAD_FACTOR = 0.7f;
 
 static Element* AddCollidingElement(Dictionary* dict, Element* prevElement, const void* key, const void* value);
 static void RemoveCollidingElement(Dictionary* dict, Element* prevElement, const void* key);
 static Element* GetCollidingElement(const Dictionary* dict, Element* prevElement, const void* key);
-static uint64_t HashKey(const void* key, const size_t keySize);
 
 static size_t ElementSize(const Dictionary* dict);
 static Element* ElementNextElement(const Element* element);
@@ -44,7 +42,7 @@ Dictionary* DictionaryNew(size_t keySize, size_t valueSize)
     LogAssert(valueSize > 0);
     LogAssert(newDictionary != NULL);
 
-    DictionaryInit(newDictionary, keySize, valueSize, INITIAL_CAPACITY);
+    DictionaryInit(newDictionary, keySize, valueSize);
 
     return newDictionary;
 }
@@ -68,7 +66,7 @@ void* DictionaryAdd(Dictionary* dict, const void* key, const void* value)
         DictionaryResize(dict, ArrayCapacity(&(dict->elements)) * GOLDEN_RATIO);
     }
 
-    uint64_t hash = HashKey(key, dict->keySize);
+    uint64_t hash = HashFNV1a64(key, dict->keySize);
     uint64_t index = hash % ArrayCapacity(&(dict->elements));
 
     Element* newElement = (Element*) ArrayGet(&(dict->elements), index);
@@ -113,7 +111,7 @@ void DictionaryRemove(Dictionary* dict, const void* key)
     LogAssert(dict != NULL);
     LogAssert(key != NULL);
 
-    uint64_t hash = HashKey(key, dict->keySize);
+    uint64_t hash = HashFNV1a64(key, dict->keySize);
     uint64_t index = hash % ArrayCapacity(&(dict->elements));
 
     Element* elementToRemove = (Element*) ArrayGet(&(dict->elements), index);
@@ -155,7 +153,7 @@ void* DictionaryGet(const Dictionary* dict, const void* key)
     LogAssert(dict != NULL);
     LogAssert(key != NULL);
 
-    uint64_t hash = HashKey(key, dict->keySize);
+    uint64_t hash = HashFNV1a64(key, dict->keySize);
     uint64_t index = hash % ArrayCapacity(&(dict->elements));
 
     Element* elementLocation = (Element*) ArrayGet(&(dict->elements), index);
@@ -265,9 +263,8 @@ uint64_t DictionaryNum(const Dictionary* dict)
  * @param dict The dictionary to be initalized.
  * @param keySize The memory footprint of the key.
  * @param valueSize The memory footprint of the value.
- * @param capacity The number of elements available in the main array. Although the total amount of elements in the dictionary can be limitless, the capacity of the dictionary should be large enough for performace reasons.
  */
-void DictionaryInit(Dictionary* dict, size_t keySize, size_t valueSize, const uint64_t capacity)
+void DictionaryInit(Dictionary* dict, size_t keySize, size_t valueSize)
 {
     LogAssert(dict != NULL);
     LogAssert(keySize > 0);
@@ -277,12 +274,12 @@ void DictionaryInit(Dictionary* dict, size_t keySize, size_t valueSize, const ui
     dict->valueSize = valueSize;
     dict->num = 0;
 
-    ArrayInit(&(dict->elements), ElementSize(dict), (uint64_t) (capacity / MAX_LOAD_FACTOR));
+    ArrayInit(&(dict->elements), ElementSize(dict), (uint64_t) (INITIAL_CAPACITY));
     Element* emptyElement = malloc(ElementSize(dict));
     memset(emptyElement, 0, ElementSize(dict));
     ArrayFill(&(dict->elements), emptyElement);
 
-    BucketArrayInit(&(dict->collisionElements), ElementSize(dict), ceil(capacity * (1.0f - MAX_LOAD_FACTOR)));
+    BucketArrayInit(&(dict->collisionElements), ElementSize(dict), ceil(INITIAL_CAPACITY * (1.0f - MAX_LOAD_FACTOR)));
 }
 
 /**
@@ -419,30 +416,6 @@ static Element* GetCollidingElement(const Dictionary* dict, Element* prevElement
     }
 
     return GetCollidingElement(dict, nextElement, key);
-}
-
-/**
- * @brief Returns a hash, computed from the given key.
- * @param key The key data to be hashed.
- * @param keySize The memory footprint of the key.
- * @return uint64_t A semi-unique hash, computed from the given key.
- */
-static uint64_t HashKey(const void* key, const size_t keySize)
-{
-    LogAssert(key != NULL);
-    LogAssert(keySize > 0);
-
-    uint8_t* keyBytes = (uint8_t*) key; // The data gets converted to an array of uint8.
-
-    uint64_t hash = HASH_OFFSET;
-
-    for(int i = 0; i < keySize; ++i) // FNV-1a hashing algorithm
-    {
-        hash = hash ^ keyBytes[i];
-        hash *= HASH_PRIME;
-    }
-
-    return hash;
 }
 
 /**

@@ -26,7 +26,7 @@ struct Dictionary
     Array elements;                     // The main array of elements.
 };
 
-void DictionaryInit(Dictionary* dict, size_t keySize, size_t valueSize, const uint64_t capacity);
+void DictionaryInit(Dictionary* dict, size_t keySize, size_t valueSize);
 void DictionaryDeinit(Dictionary* dict);
 
 size_t DictionaryGetSize(size_t keySize, size_t valueSize);

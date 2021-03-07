@@ -64,7 +64,7 @@ void* BucketArrayAdd(BucketArray* bucketArray, const void* newElement)
 /**
  * @brief Remove the last element of the array.
  * @param  bucketArray: The bucketArray to remove from.
- * @param  poppedElement: Pointer to retreiving data, the get a copy of the element that was removed. This can be left to NULL if no returned value is requested.
+ * @param  poppedElement: Pointer to retrieving data, the get a copy of the element that was removed. This can be left to NULL if no returned value is requested.
  */
 void BucketArrayPopBack(BucketArray* bucketArray, void* poppedElement)
 {
@@ -157,6 +157,22 @@ void BucketArrayResize(BucketArray* bucketArray, const uint64_t newCapacity)
     }
 
     bucketArray->num = fmin(bucketArray->num, newCapacity);
+}
+
+void BucketArrayFill(BucketArray* bucketArray, void* value)
+{
+    LogAssert(bucketArray != NULL);
+    LogAssert(value != NULL);
+
+    uint64_t capacity = BucketArrayCapacity(bucketArray);
+
+    bucketArray->num = capacity;
+
+    for(int i = 0; i < capacity; ++i)
+    {
+        void* locationToSet = BucketArrayGet(bucketArray, i);
+        memcpy(locationToSet, value, bucketArray->elementSize);
+    }
 }
 
 /**
@@ -272,6 +288,20 @@ void BucketArrayDeinit(BucketArray* bucketArray)
     }
 
     ArrayDeinit(&(bucketArray->bucketPtrs));
+}
+
+/**
+ * @brief Retrieve a specific bucket from a bucket array.
+ * @param bucketArray The bucket array to retrieve the bucket from.
+ * @param bucketIndex The index of the bucket.
+ * @return void* A pointer to the bucket. This is a pointer to that sub-array.
+ */
+void* BucketArrayGetBucket(BucketArray* bucketArray, const uint64_t bucketIndex)
+{
+    LogAssert(bucketArray != NULL);
+    LogAssert(bucketIndex < ArrayNum(&(bucketArray->bucketPtrs)));
+
+    return *(void**) ArrayGet(&(bucketArray->bucketPtrs), bucketIndex);
 }
 
 /* ----------------------------------------------------- Private ---------------------------------------------------- */

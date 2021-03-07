@@ -18,4 +18,6 @@ struct BucketArray
 void BucketArrayInit(BucketArray* bucketArray, const size_t elementSize, const uint64_t bucketCapacity);
 void BucketArrayDeinit(BucketArray* bucketArray);
 
+void* BucketArrayGetBucket(BucketArray* bucketArray, const uint64_t bucketIndex);
+
 #endif

@@ -37,7 +37,7 @@ void TestDictionaryResize()
 {
     Dictionary* dict = DictionaryNew(sizeof(int), sizeof(int));
 
-    int dictionaryInitialCapacity = 22;
+    int dictionaryInitialCapacity = 16;
 
     int value;
     for(int i = 0; i < dictionaryInitialCapacity; ++i)
@@ -61,5 +61,4 @@ void TestDictionary()
 {
     TestDictionaryAddGet();
     TestDictionaryResize();
-
 }
