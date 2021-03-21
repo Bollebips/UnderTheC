@@ -10,7 +10,7 @@
 struct Component
 {
     ComponentTypeID componentTypeID;
-    ComponentID componentID;
+    ComponentInstanceID componentInstanceID;
     Entity entity;
 };
 

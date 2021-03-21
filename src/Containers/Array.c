@@ -145,6 +145,19 @@ void ArrayClear(Array* array)
     array->num = 0;
 }
 
+bool ArrayContains(Array* array, void* element)
+{
+    for(int i = 0; i < ArrayNum(array); ++i)
+    {
+        if(memcmp(ArrayGet(array, i), element, array->elementSize) == 0)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 /**
  * @brief Free the array.
  * @param array The array to free.

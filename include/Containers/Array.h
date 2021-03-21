@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 /**
  * @brief A dynamic array, that dynamically expands its memory footprint when necessary.
@@ -16,6 +17,7 @@ void* ArrayGet(const Array* array, const uint64_t index);
 void ArrayResize(Array* array, const uint64_t newCapacity);
 void ArrayFill(Array* array, void* value);
 void ArrayClear(Array* array);
+bool ArrayContains(Array* array, void* element);
 void ArrayFree(Array* array);
 
 uint64_t ArrayNum(const Array* array);

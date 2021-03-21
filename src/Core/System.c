@@ -2,6 +2,7 @@
 
 #include "Logger.h"
 #include "Utils/Hash.h"
+#include "Entity.h"
 
 System* SystemNew(const char* systemName, const size_t systemNameLength, const ComponentTypeID componentsToUpdate[], const uint8_t numComponentsToUpdate, uint64_t updateOrder, void (*updateFunction)(int, void* []))
 {
@@ -35,6 +36,7 @@ void SystemInit(System* system, const char* systemName, const size_t systemNameL
     system->updateOrder = updateOrder;
     system->updateFunction = updateFunction;
 
+    SparseSetInit(&(system->compatibleEntities), sizeof(Entity), EntityGetID, 16); //TODO: hardcoded value!
     ArrayInit(&(system->componentsToUpdate), sizeof(ComponentTypeID), numComponentsToUpdate);
 
     for(int i = 0; i < numComponentsToUpdate; ++i)

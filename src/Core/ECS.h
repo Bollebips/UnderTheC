@@ -9,7 +9,7 @@
 static const uint8_t MAX_COMPONENT_TYPES = 64;
 static const uint8_t MAX_SYSTEM_TYPES = 64;
 
-ComponentID nextComponentID;
+ComponentInstanceID nextComponentID;
 
 struct ECS ecs;
 

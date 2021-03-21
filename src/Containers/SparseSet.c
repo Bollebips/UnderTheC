@@ -84,6 +84,14 @@ void SparseSetRemove(SparseSet* sparseSet, const uint64_t index)
     BucketArrayPopBack(&(sparseSet->denseData), NULL);
 }
 
+void* SparseSetGet(SparseSet* sparseSet, const uint64_t index)
+{
+    LogAssert(sparseSet);
+
+    uint64_t denseIndex = *(uint64_t*) BucketArrayGet(&(sparseSet->sparseData), index);
+    return BucketArrayGet(&(sparseSet->denseData), denseIndex);
+}
+
 bool SparseSetContains(SparseSet* sparseSet, const uint64_t index)
 {
     LogAssert(sparseSet != NULL);

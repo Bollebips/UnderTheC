@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 typedef uint64_t ComponentTypeID;
-typedef uint64_t ComponentID;
+typedef uint64_t ComponentInstanceID;
 
 typedef struct Component Component;
 

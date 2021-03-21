@@ -28,7 +28,7 @@ Entity SceneAddEntity(Scene* scene)
 
 void SceneRegisterComponent(Scene* scene, char* componentName, size_t componentNameSize, size_t componentSize)
 {
-    ComponentID componentTypeID = (ComponentID) HashFNV1a64(componentName, componentNameSize);
+    ComponentTypeID componentTypeID = (ComponentTypeID) HashFNV1a64(componentName, componentNameSize);
 
     if(DictionaryGet(&(scene->components), &componentTypeID) != NULL)
     {

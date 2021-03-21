@@ -15,7 +15,7 @@ typedef struct SparseSet
 SparseSet* SparseSetNew(const size_t elementSize, const uint64_t(*getIndexFromDataFunc)(const void*), const uint64_t bucketCapacity);
 void SparseSetAdd(SparseSet* sparseSet, const void* newElement);
 void SparseSetRemove(SparseSet* sparseSet, const uint64_t index);
-// TODO: Add a get function for a specific index, maybe? Not sure if this is something we should support, as the sparse set is meant for fast iteration primarily.
+void* SparseSetGet(SparseSet* sparseSet, const uint64_t index);
 bool SparseSetContains(SparseSet* sparseSet, const uint64_t index);
 void SparseSetFree(SparseSet* sparseSet);
 

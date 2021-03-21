@@ -19,7 +19,7 @@ typedef struct Scene
 
 Entity SceneAddEntity(Scene* scene);
 void SceneRegisterComponent(Scene* scene, char* componentName, size_t componentNameSize, size_t componentSize);
-ComponentID SceneAddComponent(Scene* scene, ComponentTypeID componentTypeID, void* component, Entity entity);
+ComponentInstanceID SceneAddComponent(Scene* scene, ComponentTypeID componentTypeID, void* component, Entity entity);
 
 void SceneInit(Scene* scene);
 void SceneDeinit(Scene* scene);

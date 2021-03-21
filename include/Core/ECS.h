@@ -17,7 +17,7 @@ void ECSFree(ECS* ecs);
 // void ECSAddEntity(Entity* e);
 
 ComponentTypeID ECSRegisterComponent(ECS* ecs, char* componentName, size_t componentNameSize, size_t componentSize);
-ComponentID ECSAddComponent(ECS* ecs, ComponentTypeID componentTypeID, void* component, Entity entity, Scene* scene);
+ComponentInstanceID ECSAddComponent(ECS* ecs, ComponentTypeID componentTypeID, void* component, Entity entity, Scene* scene);
 ComponentTypeID ECSGetComponentTypeID(ECS* ecs, char* componentName);
 
 void ECSRegisterSystem(ECS* ecs, System* system);
