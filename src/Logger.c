@@ -118,9 +118,9 @@ static void PrintHeader()
     struct tm tm = { 0 };
     localtime_s(&tm, &t);
 
-    strftime(timeBuffer, 32, "%d-%m-%y %H:%M:%S ", &tm);
+    strftime(timeBuffer, 32, "%d-%m-%y %H:%M:%S", &tm);
 
-    vprintf(timeBuffer, NULL);
+    printf("%s ", timeBuffer);
 }
 
 /**

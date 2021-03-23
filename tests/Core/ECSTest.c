@@ -37,8 +37,8 @@ void UpdateTestSystem1(int numComponents, void* componentData[])
 
 void UpdateTestSystem1And2(int numComponents, void* componentData[])
 {
-    TestComponent1* testComponent1 = (TestComponent1*) componentData;
-    TestComponent2* testComponent2 = (TestComponent2*) (componentData + sizeof(TestComponent1));
+    TestComponent1* testComponent1 = (TestComponent1*) componentData[0];
+    TestComponent2* testComponent2 = (TestComponent2*) componentData[1];
 
     TEST_CHECK(testComponent1->testInt == 1234);
     TEST_CHECK(testComponent1->testFloat == 3.14f);
@@ -73,7 +73,7 @@ void TestECS()
     TestComponent2 newTestComponent2;
     newTestComponent2.testInt2 = -4321;
     newTestComponent2.testFloat2 = 69.69f;
-    newTestComponent2.testBool2 = true;
+    newTestComponent2.testBool2 = false;
     ECSAddComponent(ecs, testComponent2TypeID, &newTestComponent2, newEntity, newScene);
 
     ComponentTypeID componentsToUpdate1[1] = { testComponent1TypeID };

@@ -2,6 +2,7 @@
 #define HASH_H
 
 #include <stdint.h>
+#include <stddef.h>
 
 uint64_t HashFNV1a64(const void* data, const size_t dataSize);
 

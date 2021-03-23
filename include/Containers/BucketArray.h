@@ -2,6 +2,7 @@
 #define BUCKETARRAY_H
 
 #include <stdint.h>
+#include <stddef.h>
 
 /**
  * @brief A dynamic array, that dynamically expands its memory footprint when necessary. This expanding happens in buckets, in order to prevent pointers to elements becoming corrupt.

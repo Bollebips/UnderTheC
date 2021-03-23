@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -g
+CFLAGS = -Wall -g -fPIC
 
 SRC := src
 INC := include
@@ -9,7 +9,7 @@ EXE := $(shell basename $(CURDIR)).exe
 DLL := lib$(shell basename $(CURDIR)).dll
 
 INCLUDES := -I$(SRC)
-LINKS :=
+LINKS := -lm
 DEBUGFLAGS := -DDEBUG
 RELEASEFLAGS := -O3
 # -Og
@@ -58,10 +58,10 @@ test : $(TESTEXE)
 
 $(TESTEXE): $(TESTS)/$(TESTFILE).o $(OBJECTFILES) $(HEADERFILES) $(INCLUDEFILES)
 	$(MKDIR) $(BIN);
-	$(CC) $(CFLAGS) $(INCLUDES) -I3rdParty\acutest\include $(LINKS) $(DEBUGFLAGS) $(TESTS)/$(TESTFILE).o $(filter-out %main.o,$(OBJECTFILES)) -o $(TESTEXE)
+	$(CC) $(CFLAGS) $(INCLUDES) -I3rdParty/acutest/include $(DEBUGFLAGS) $(TESTS)/$(TESTFILE).o $(filter-out %main.o,$(OBJECTFILES)) -o $(TESTEXE) $(LINKS)
 
 $(TESTS)/$(TESTFILE).o : $(OBJECTFILES) $(TEST_SRC)
-	$(CC) $(CFLAGS) $(INCLUDES) -I3rdParty\acutest\include $(LINKS) $(DEBUGFLAGS) -c $(TESTS)\$(TESTFILE).c -o $(TESTS)/$(TESTFILE).o
+	$(CC) $(CFLAGS) $(INCLUDES) -I3rdParty/acutest/include $(DEBUGFLAGS) -c $(TESTS)/$(TESTFILE).c -o $(TESTS)/$(TESTFILE).o $(LINKS)
 
 clean:
 	$(CLEANUP) $(OBJ) $(BIN) $(TESTS)/$(BIN) $(TESTS)/$(OBJ) $(TESTS)/$(TESTFILE).o
