@@ -1,0 +1,250 @@
+S1(A, B, C)	S2(A, B)	S3(B, C)	
+A: S1, S1, S2		(S1, S2)
+B: S1, S1, S3, S2	(S1, S3, S2)
+C: S3, S3, S1		(S3, S1)
+
+
+A:			e3		e7		e8		e6
+			a0		a1		a2		a3
+       group A0, A1, A2^
+
+B:			e4		e5
+			b0		b1
+   group B0, B1, B2, B3^
+
+C:			e0		e2		e1
+			c0		c1		c2
+       group C0, C1, C2^
+
+
+---------------------------> Add B to e7 <-------------------------------------
+
+
+A:			e3		e7		e8		e6
+			a0		a1		a2		a3
+       group A0, A1, A2^
+
+B:			e4		e5		e7	<-- Assign B to e7
+			b0		b1		b2
+   group B0, B1, B2, B3^
+
+C:			e0		e2		e1
+			c0		c1		c2
+       group C0, C1, C2^
+
+
+-------------------------------------------------------------------------------
+
+
+A:			e3		e7		e8		e6	<--- Check if e7 was already part of a group. It is not, so we can proceed as normal.
+			a0		a1		a2		a3
+       group A0, A1, A2^
+
+B:			e7		e5		e4	<--- Swap e4 and e7, and update group B3, because group B3 is assigned to S2. 
+			b2		b1		b0		It is S2 that is grouped, because the new entity e7 now gets updated by this system, as it has both component A and B now.
+       group B0, B1, B2^	      ^group B3
+
+C:			e0		e2		e1
+			c0		c1		c2
+       group C0, C1, C2^
+
+
+-------------------------------------------------------------------------------
+
+
+A:			e7		e3		e8		e6	<--- Swap e3 and e7, and update group A2
+			a1		a0		a2		a3
+           group A0, A1^	      ^group A2
+
+B:			e7		e5		e4
+			b2		b1		b0
+       group B0, B1, B2^	      ^group B3
+
+C:			e0		e2		e1
+			c0		c1		c2
+       group C0, C1, C2^
+
+
+
+
+--------------------------------> Add C to e4 <---------------------------------
+
+
+A:			e7		e3		e8		e6
+			a1		a0		a2		a3
+           group A0, A1^	      ^group A2
+
+B:			e7		e5		e4
+			b2		b1		b0
+       group B0, B1, B2^	      ^group B3
+
+C:			e0		e2		e1		e4	<--- Assign C to e4
+			c0		c1		c2		c3
+       group C0, C1, C2^
+
+
+-------------------------------------------------------------------------------
+
+
+A:			e7		e3		e8		e6
+			a1		a0		a2		a3
+           group A0, A1^	      ^group A2
+
+B:			e7		e5		e4	<--- Check if e4 is already in a group. It is not, so we can add e4 to group C0 (as this is the group for entities that are sorted in all relevant component groups.)
+			b2		b1		b0
+       group B0, B1, B2^	      ^group B3
+
+C:			e4		e2		e1		e0	<--- Swap e0 and e4, and update group C0, and all subsequent groups
+			c3		c1		c2		c0
+       		       group C0, C1, C2^
+
+
+-------------------------------------------------------------------------------
+
+
+A:			e7		e3		e8		e6
+			a1		a0		a2		a3
+           group A0, A1^	      ^group A2
+
+B:			e4		e5		e7	<--- Swap e4 and e7, and update group B2, and all subsequent groups.
+			b0		b1		b2
+       	   group B0, B1^	       ^group B2, B3
+
+C:			e4		e2		e1		e0
+			c3		c1		c2		c0
+       		       group C0, C1, C2^
+
+
+-------------------------------------------------------------------------------
+
+
+A:			e7		e3		e8		e6
+			a1		a0		a2		a3
+           group A0, A1^	      ^group A2
+
+B:			e4		e7		e5	<--- Swap e5 and e7, and update group B3. This is still parto for updating the subsequent groups.
+			b0		b2		b1
+       	   group B0, B1^	       ^group B2       ^group B3
+
+C:			e4		e2		e1		e0
+			c3		c1		c2		c0
+       		       group C0, C1, C2^
+
+
+--------------------------------> Add C to e3 <---------------------------------
+
+
+A:			e7		e3		e8		e6
+			a1		a0		a2		a3
+           group A0, A1^	      ^group A2
+
+B:			e4		e7		e5
+			b0		b2		b1
+       	   group B0, B1^	       ^group B2       ^group B3
+
+C:			e4		e2		e1		e0		e3	<--- Assign C to e3
+			c3		c1		c2		c0		c4
+       		       group C0, C1, C2^
+
+
+--------------------------------> Add B to e3 <---------------------------------
+
+
+A:			e7		e3		e8		e6
+			a1		a0		a2		a3
+           group A0, A1^	      ^group A2
+
+B:			e4		e7		e5		e3	<--- Assign B to e3, now all 3 systems will have to update e3
+			b0		b2		b1		b3
+       	   group B0, B1^	       ^group B2       ^group B3
+
+C:			e4		e2		e1		e0		e3
+			c3		c1		c2		c0		c4
+       		       group C0, C1, C2^
+
+
+
+-------------------------------------------------------------------------------
+
+A:			e7		e3		e8		e6
+			a1		a0		a2		a3
+           group A0, A1^	      ^group A2
+
+B:			e4		e7		e5		e3
+			b0		b2		b1		b3
+       	   group B0, B1^	       ^group B2       ^group B3
+
+C:			e4		e2		e1		e0		e3	<--- We check in C, if e3 already is part of a group. We have to check C, because S1 has not the highest sorting priority in C.
+			c3		c1		c2		c0		c4		e3 is not in a group in C, so we have to put e3 in group B1 (as group B1 is reserved for S1 entities which are sorted in all relevant components.)
+       		       group C0, C1, C2^
+
+-------------------------------------------------------------------------------
+
+A:			e7		e3		e8		e6
+			a1		a0		a2		a3
+           group A0, A1^	      ^group A2
+
+B:			e4		e3		e5		e7	<--- Swap e3 with e7 and update group B1. Then Update all subsequent groups. B2 can just be updated the same as B1, because there are no entities in group B2.
+			b0		b3		b1		b2
+       		               group B0^	       ^group B1, B2, B3
+
+C:			e4		e2		e1		e0		e3
+			c3		c1		c2		c0		c4
+       		       group C0, C1, C2^
+
+
+-------------------------------------------------------------------------------
+
+A:			e7		e3		e8		e6
+			a1		a0		a2		a3
+           group A0, A1^	      ^group A2
+
+B:			e4		e3		e7		e5	<--- To update group B3, we swap e7 and e5, and update group B3
+			b0		b3		b2		b1
+       		               group B0^	       ^group B1, B2   ^group B3
+
+C:			e4		e2		e1		e0		e3
+			c3		c1		c2		c0		c4
+       		       group C0, C1, C2^
+
+-------------------------------------------------------------------------------
+
+A:			e3		e7		e8		e6	<--- Swap e3 annd e7, and update group A1
+			a0		a1		a2		a3
+               group A0^	      ^group A1, A2
+
+B:			e4		e3		e7		e5
+			b0		b3		b2		b1
+       		               group B0^	       ^group B1, B2   ^group B3
+
+C:			e4		e2		e1		e0		e3
+			c3		c1		c2		c0		c4
+       		       group C0, C1, C2^
+
+-------------------------------------------------------------------------------
+
+A:			e3		e7		e8		e6	<--- Update the subsequent groups, A2 in this case
+			a0		a1		a2		a3
+               group A0^	      ^group A1       ^group A2
+
+B:			e4		e3		e7		e5
+			b0		b3		b2		b1
+       		               group B0^	       ^group B1, B2   ^group B3
+
+C:			e4		e2		e1		e0		e3
+			c3		c1		c2		c0		c4
+       		       group C0, C1, C2^
+
+-------------------------------------------------------------------------------
+
+A:			e3		e7		e8		e6
+			a0		a1		a2		a3
+               group A0^	      ^group A1       ^group A2
+
+B:			e4		e3		e7		e5
+			b0		b3		b2		b1
+       		               group B0^	       ^group B1, B2   ^group B3
+
+C:			e4		e3		e1		e0		e2	<--- Swap e2 and e3, and update group C2
+			c3		c4		c2		c0		c1
+       		           group C0, C1^	       ^group C2

@@ -1,0 +1,134 @@
+S1(A, B, C)	S2(A, B)	S3(B, C)	
+A: S1, S2
+B: S1, S3, S2
+C: S3, S1
+
+
+A:	e3 e7 e8 e6
+	a0 a1 a2 a3
+group 0^
+
+B:	e4 e5
+	b0 b1
+group 0^
+
+C:	e0 e2 e1
+	c0 c1
+group 0^
+
+
+---> Add A to e7
+
+
+A:	e3 e7 e8 e6
+	a0 a1 a2 a3
+group 0^
+
+B:	e4 e5 e7
+	b0 b1 b2
+group 0^      ^-- Assign B to e7
+
+C:	e0 e2 e1
+	c0 c1
+group 0^
+
+---------------------
+
+A:	e7 e3 e8 e6  <-- swap e7 with e3 and update group A1 (S2)
+	a1 a0 a2 a3
+groupA0^  ^group A1
+
+B:	e7 e5 e4  <--- Update group B2 (S2)
+	b2 b1 b0
+group01^  ^group B2
+
+C:	e0 e2 e1
+	c0 c1 c2
+group C^
+
+
+---> Add C to e4
+
+A:	e7 e3 e8 e6
+	a1 a0 a2 a3
+groupA0^  ^group A1
+
+B:	e7 e5 e4
+	b2 b1 b0
+group01^  ^group B2
+
+C:	e0 e2 e1 e4   <--- Assign C to e4
+	c0 c1 c2 c3
+group C^
+
+
+------------------------
+
+A:	e7 e3 e8 e6
+	a1 a0 a2 a3
+group 0^  ^group 1
+
+B:	e7 e5 e4
+	b2 b1 b0
+group01^  ^group B2
+
+C:	e4 e2 e1 e0    <---- Swap e0 and e4 and update group C0 (S3)
+	c3 c1 c2 c0
+groupC1^  ^group C0
+
+
+------------------------
+
+A:	e7 e3 e8 e6
+	a1 a0 a2 a3
+group 0^  ^group 1
+
+B:	e4 e5 e7	<--- Swap e4 with e7 and update group B1
+	b0 b1 b2
+groupB0^  ^--- group B1 and B2
+	  
+
+C:	e4 e2 e1 e0
+	c3 c1 c2 c0
+groupC1^  ^group C0
+
+
+
+------------------------
+
+A:	e7 e3 e8 e6
+	a1 a0 a2 a3
+group 0^  ^group 1
+
+B:	e4 e7 e5	<--- Swap e7 with e5 and update group B2
+	b0 b2 b1
+groupB0^  ^  ^--- group B2
+	  ^--- group B1 
+
+C:	e4 e2 e1 e0
+	c3 c1 c2 c0
+groupC1^  ^group C0
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

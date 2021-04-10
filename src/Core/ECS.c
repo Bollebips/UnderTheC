@@ -30,14 +30,16 @@ ComponentTypeID ECSRegisterComponent(ECS* ecs, char* componentName, size_t compo
     {
         Scene* scene = ArrayGet(&(ecs->Scenes), i);
 
-        SparseSet* componentSparseSet = SparseSetNew(componentSize, ComponentGetID, 16); //TODO: hardcoded bucketsize 16
-        DictionaryAdd(&(scene->components), &componentTypeID, componentSparseSet);
+        ComponentContainer
+
+        GroupedSparseSet* componentGroupedSparseSet = GroupedSparseSetNew(componentSize, ComponentGetID, 16, 1); //TODO: hardcoded values
+        DictionaryAdd(&(scene->components), &componentTypeID, componentGroupedSparseSet);
     }
 
     return componentTypeID;
 }
 
-ComponentInstanceID ECSAddComponent(ECS* ecs, ComponentTypeID componentTypeID, void* component, Entity entity, Scene* scene) //TODO: remove scene argument
+ComponentInstanceID ECSAddComponent(ECS* ecs, ComponentTypeID componentTypeID, void* component, Entity entity, Scene* scene) //TODO: remove scene argument. Instead, the entity should know what scene it is in.
 {
     LogAssert(ecs);
     LogAssert(component);
@@ -50,22 +52,41 @@ ComponentInstanceID ECSAddComponent(ECS* ecs, ComponentTypeID componentTypeID, v
     c->componentInstanceID = nextComponentID;
     c->entity = entity;
 
-    SparseSet* componentSparseSet = DictionaryGet(&(scene->components), &componentTypeID);
-    SparseSetAdd(componentSparseSet, component);
+    //TODO: ENABLE AGAIN!!!!!
+    // GroupedSparseSet* componentGroupedSparseSet = DictionaryGet(&(scene->components), &componentTypeID);
+    // GroupedSparseSetAdd(componentGroupedSparseSet, component);
 
     BucketArray* entities = SparseSetGetDenseData(&(scene->entities));
 
-    for(int i = 0; i < ArrayNum(&(ecs->systems)); ++i) // TODO: this should not just add all entities to all systems. It should filter based on the components needed by the specific systems.
+    for(int i = 0; i < ArrayNum(&(ecs->systems)); ++i) // TODO: For performance, it would be good to not loop over all systems. It would be better to only loop over the systems, that update the current component being added. But for that, we need to store somewhere for each component, which systems update that component.
     {
-        for(int e = 0; e < BucketArrayNum(entities); ++e)
-        {
-            System* system = ArrayGet(&(ecs->systems), i);
+        System* system = ArrayGet(&(ecs->systems), i);
 
-            SparseSetAdd(&(system->compatibleEntities), BucketArrayGet(entities, e));
+        bool hasAllNecessaryComponents = true;
+        bool hasCurrentlyAddedComponentType = false;    // TODO: REMOVE! When we manage to only check systems that update the currently added component type, we no longer need to check this value.
+
+        for(int c = 0; c < ArrayNum(&(system->compatibleEntities)); ++i)
+        {
+            ComponentTypeID* componentToBeUpdated = ArrayGet(&(system->componentsToUpdate), c);
+            GroupedSparseSet* componentSet = DictionaryGet(&(scene->components), componentToBeUpdated);
+
+            if(!GroupedSparseSetContains(componentSet, entity))
+            {
+                hasAllNecessaryComponents = false;
+                break;
+            }
+            if(*componentToBeUpdated == componentTypeID)
+            {
+                hasCurrentlyAddedComponentType = true;
+            }
+        }
+        if(hasAllNecessaryComponents && hasCurrentlyAddedComponentType)
+        {
+            SparseSetAdd(&(system->compatibleEntities), BucketArrayGet(entities, entity));
         }
     }
 
-    return nextComponentID; // TODO: return the specific component's ID.
+    return nextComponentID;
 }
 
 void ECSRegisterSystem(ECS* ecs, System* system)
@@ -102,8 +123,8 @@ void ECSUpdate(ECS* ecs, Scene* scene)//TODO: remove scene argument
 
             ComponentTypeID* componentTypeIDToUpdate = ArrayGet(&(system->componentsToUpdate), 0);
 
-            SparseSet* sparseComponents = DictionaryGet(&(scene->components), componentTypeIDToUpdate);
-            BucketArray* denseComponents = SparseSetGetDenseData(sparseComponents);
+            GroupedSparseSet* sparseComponents = DictionaryGet(&(scene->components), componentTypeIDToUpdate);
+            BucketArray* denseComponents = GroupedSparseSetGetDenseData(sparseComponents);
 
             for(int c = 0; c < BucketArrayNum(denseComponents); ++c)
             {
@@ -123,8 +144,8 @@ void ECSUpdate(ECS* ecs, Scene* scene)//TODO: remove scene argument
             for(int sc = 0; sc < ArrayNum(&(system->componentsToUpdate)); ++sc)
             {
                 ComponentTypeID* componentTypeID = ArrayGet(&(system->componentsToUpdate), sc);
-                SparseSet* sparseComponents = DictionaryGet(&(scene->components), componentTypeID);
-                BucketArray* denseComponents = SparseSetGetDenseData(sparseComponents);
+                GroupedSparseSet* sparseComponents = DictionaryGet(&(scene->components), componentTypeID);
+                BucketArray* denseComponents = GroupedSparseSetGetDenseData(sparseComponents);
 
                 componentSetsToUpdate[sc] = sparseComponents;
 
@@ -211,8 +232,8 @@ void ECSRegisterEntityToSystems(ECS* ecs, Entity entity, Scene* scene) //TODO: r
         {
             ComponentTypeID* componentTypeIDToUpdate = ArrayGet(&(system->componentsToUpdate), c);
 
-            SparseSet* sparseComponents = DictionaryGet(&(scene->components), componentTypeIDToUpdate);
-            if(!SparseSetContains(sparseComponents, entity))
+            GroupedSparseSet* sparseComponents = DictionaryGet(&(scene->components), componentTypeIDToUpdate);
+            if(!GroupedSparseSetContains(sparseComponents, entity))
             {
                 entityShouldBeUpdatedBySystem = false;
                 break;

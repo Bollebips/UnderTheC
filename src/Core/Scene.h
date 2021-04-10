@@ -5,6 +5,7 @@
 
 #include "Containers/Dictionary.h"
 #include "Containers/SparseSet.h"
+#include "Containers/GroupedSparseSet.h"
 #include "Entity.h"
 #include "Component.h"
 #include "System.h"
@@ -13,7 +14,7 @@ Entity nextEntityID;
 
 typedef struct Scene
 {
-    Dictionary components;  // Dictionary<ComponentTypeID, SparseSet<ComponentID>>
+    Dictionary components;  // Dictionary<ComponentTypeID, ComponentContainer(GroupedSparseSet<ComponentID>)>
     SparseSet entities;
 } Scene;
 

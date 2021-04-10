@@ -35,8 +35,8 @@ void SceneRegisterComponent(Scene* scene, char* componentName, size_t componentN
         return;
     }
 
-    SparseSet* newSparseSet = SparseSetNew(componentSize, &ComponentGetID, 16);
-    DictionaryAdd(&(scene->components), &componentTypeID, newSparseSet);
+    GroupedSparseSet* newGroupedSparseSet = GroupedSparseSetNew(componentSize, &ComponentGetID, 16, 1); // TODO: remove hardcoded values!!
+    DictionaryAdd(&(scene->components), &componentTypeID, newGroupedSparseSet);
 }
 
 // ComponentID SceneAddComponent(Scene* scene, ComponentTypeID componentTypeID, void* component, Entity entity)
@@ -54,8 +54,7 @@ void SceneInit(Scene* scene)
 
     nextEntityID = 0;
 
-    DictionaryInit(&(scene->components), sizeof(ComponentTypeID), sizeof(SparseSet));
-    // DictionaryInit(&(scene->components), sizeof(ComponentTypeID), sizeof(Array));
+    DictionaryInit(&(scene->components), sizeof(ComponentTypeID), sizeof(GroupedSparseSet));
     SparseSetInit(&(scene->entities), sizeof(Entity), EntityGetID, 16);
 }
 

@@ -46,7 +46,6 @@ void UpdateTestSystem1And2(int numComponents, void* componentData[])
     TEST_CHECK(testComponent2->testInt2 == -4321);
     TEST_CHECK(testComponent2->testFloat2 == 69.69f);
     TEST_CHECK(testComponent2->testBool2 == false);
-
 }
 
 void TestECS()

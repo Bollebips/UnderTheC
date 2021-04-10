@@ -1,5 +1,7 @@
 #include "Component.h"
 
+#include "Logger.h"
+
 uint64_t ComponentGetID(const void* component)
 {
     // return *(ComponentID*) componentID;
