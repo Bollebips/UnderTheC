@@ -1,12 +1,6 @@
-#include "Array.h"
+﻿#include "Array.h"
 
-#include "Math/Math.h"
-#include "Logger.h"
 
-#include <stdio.h>
-#include <string.h>
-#include <math.h>
-#include <assert.h>
 
 static const int INITIAL_CAPACITY = 16;
 

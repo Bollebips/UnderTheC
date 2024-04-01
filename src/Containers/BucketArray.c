@@ -130,7 +130,7 @@ void BucketArrayResize(BucketArray* bucketArray, const uint64_t newCapacity)
 
     uint64_t numBuckets = ceil((float) newCapacity / (float) bucketArray->bucketCapacity);
 
-    int prevNumBucketsCurrentNumBucketsDiff = abs(bucketArray->bucketPtrs.num - numBuckets);
+    int prevNumBucketsCurrentNumBucketsDiff = bucketArray->bucketPtrs.num - numBuckets;
 
     if(bucketArray->bucketPtrs.num > numBuckets)
     {

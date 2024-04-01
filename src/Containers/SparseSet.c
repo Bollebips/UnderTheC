@@ -14,7 +14,7 @@
  * @param bucketCapacity
  * @return SparseSet*
  */
-SparseSet* SparseSetNew(const size_t elementSize, const uint64_t(*getIndexFromDataFunc)(const void*), const uint64_t bucketCapacity)
+SparseSet* SparseSetNew(const size_t elementSize, uint64_t(*getIndexFromDataFunc)(const void*), const uint64_t bucketCapacity)
 {
     LogAssert(getIndexFromDataFunc != NULL);
     LogAssert(bucketCapacity > 0);
@@ -129,7 +129,7 @@ BucketArray* SparseSetGetDenseData(SparseSet* sparseSet)
     return &(sparseSet->denseData);
 }
 
-void SparseSetInit(SparseSet* sparseSet, const size_t elementSize, const uint64_t(*getIndexFromDataFunc)(const void*), uint64_t bucketCapacity)
+void SparseSetInit(SparseSet* sparseSet, const size_t elementSize, uint64_t(*getIndexFromDataFunc)(const void*), uint64_t bucketCapacity)
 {
     LogAssert(sparseSet != NULL);
     LogAssert(bucketCapacity > 0);

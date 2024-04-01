@@ -1,7 +1,8 @@
+﻿#pragma once
+
 #ifndef MATH_I
 #define MATH_I
 
-#include "../../include/Math/Math.h"
-
+extern const float GOLDEN_RATIO;
 
 #endif

@@ -1,6 +1,5 @@
-#ifndef HASH_I
-#define HASH_I
+﻿#pragma once
 
-#include "../../include/Utils/Hash.h"
+#include <stdint.h>
 
-#endif
+extern uint64_t HashFNV1a64(const void* data, const size_t dataSize);

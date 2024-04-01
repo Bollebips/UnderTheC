@@ -7,7 +7,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-#include <assert.h>
+// #include <assert.h>
 #include <math.h>
 
 static const int INITIAL_CAPACITY = 16;
