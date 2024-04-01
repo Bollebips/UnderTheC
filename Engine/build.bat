@@ -12,11 +12,12 @@ REM echo "Files:" %cFilenames%
 
 SET compiler=clang
 SET assembly=UnderTheC
-SET compilerFlags=-g  -Wvarargs -Wall -Werror
+SET compilerFlags=-g -shared -Wvarargs -Wall -Werror
 REM -Wall -Werror
 SET includeFlags=-Isrc
 SET linkerFlags=-luser32
-SET defines=-D_DEBUG -DKEXPORT -D_CRT_SECURE_NO_WARNINGS
+SET defines=-DDEBUG -DUTCeEXPORT -D_CRT_SECURE_NO_WARNINGS
 
 ECHO "Building %assembly%%..."
-%compiler% %cFilenames% %compilerFlags% -o bin/%assembly%.exe %defines% %includeFlags% %linkerFlags%
+@REM %compiler% %cFilenames% %compilerFlags% -o bin/%assembly%.exe %defines% %includeFlags% %linkerFlags%
+%compiler% %cFilenames% %compilerFlags% -o ../bin/%assembly%.dll %defines% %includeFlags% %linkerFlags%

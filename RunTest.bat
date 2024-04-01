@@ -2,7 +2,7 @@
 REM Build script for engine
 SetLocal EnableDelayedExpansion
 
-SET exe=UnderTheC
+SET exe=UnderTheC_TestProject
 ECHO "Running %exe%%.exe..."
 
-START bin/UnderTheC.exe
+CALL "bin/%exe%.exe"

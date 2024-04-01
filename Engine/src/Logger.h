@@ -8,10 +8,12 @@
 #include <stdarg.h>
 #include <time.h>
 
-void _LogAssert(const char* file, const int line, const bool expression, const char* expressionString, ...);
-void _LogError(const char* file, const int line, const char* message, ...);
-void _LogWarning(const char* file, const int line, const char* message, ...);
-void _LogInfo(const char* file, const int line, const char* message, ...);
+#include "Defines.h"
+
+UTCeAPI void _LogAssert(const char* file, const int line, const bool expression, const char* expressionString, ...);
+UTCeAPI void _LogError(const char* file, const int line, const char* message, ...);
+UTCeAPI void _LogWarning(const char* file, const int line, const char* message, ...);
+UTCeAPI void _LogInfo(const char* file, const int line, const char* message, ...);
 
 #ifdef DEBUG
 #define LogAssert(expression, ...) _LogAssert(__FILE__, __LINE__, expression, #expression, ## __VA_ARGS__, NULL)

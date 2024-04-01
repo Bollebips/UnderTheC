@@ -24,8 +24,8 @@ typedef struct Array
     void* elements;         // A pointer to the elements allocated in memory.
 }Array;
 
-void ArrayInit(Array* array, size_t elementSize, const uint64_t initialCapacity);
-void ArrayDeinit(Array* array);
+UTCeAPI void ArrayInit(Array* array, size_t elementSize, const uint64_t initialCapacity);
+UTCeAPI void ArrayDeinit(Array* array);
 
 Array* ArrayNew(size_t elementSize);
 void* ArrayAdd(Array* array, const void* newElement);
