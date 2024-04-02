@@ -14,7 +14,7 @@ SET compiler=clang
 SET assembly=UnderTheC
 SET compilerFlags=-g -shared -Wvarargs -Wall -Werror
 REM -Wall -Werror
-SET includeFlags=-Isrc
+SET includeFlags=-Isrc -I../3rdParty/glfw-3.4/include
 SET linkerFlags=-luser32
 SET defines=-DDEBUG -DUTCeEXPORT -D_CRT_SECURE_NO_WARNINGS
 

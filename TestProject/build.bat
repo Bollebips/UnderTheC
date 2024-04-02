@@ -15,9 +15,10 @@ SET assembly=UnderTheC_TestProject
 SET engine=UnderTheC
 SET compilerFlags=-g -Wvarargs -Wall -Werror
 REM -Wall -Werror
-SET includeFlags=-Isrc -I../Engine/src/
-SET linkerFlags=-L../bin/ -l%engine%.lib
-SET defines=-DDEBUG -DKIMPORT
+REM THIS GLFW include SHOULD BE moved to engine I think. Also, glfw3.dll should be copied to bin folder.
+SET includeFlags=-Isrc -I../Engine/src -I../3rdParty/glfw-3.4/include
+SET linkerFlags=-L../bin/ -l%engine%.lib -L../3rdParty/glfw-3.4/lib-static-ucrt/ -lglfw3dll
+SET defines=-DDEBUG -DUTCeIMPORT
 
 ECHO "Building %assembly%%..."
 %compiler% %cFilenames% %compilerFlags% -o ../bin/%assembly%.exe %defines% %includeFlags% %linkerFlags%

@@ -2,18 +2,38 @@
 
 #include <Containers/Array.h>
 #include <Logger.h>
-int main()
+
+#include <GLFW/glfw3.h>
+
+int main(int argc, char** argv)
 {
-    Array array;
-
-    ArrayInit(&array, 16, 64);
-
-
-    for(int i = 0; i < 10; ++i)
+    // glfwSetErrorCallback(NULL);
+    if(glfwInit() == false)
     {
-        LogAssert(i < 9, "TESTERY TESTEROOO\n");
+        LogError("WOOPS");
+        return 1;
+    }
+
+    GLFWwindow* window = glfwCreateWindow(640, 480, "My Title", NULL, NULL);
+
+    while (!glfwWindowShouldClose(window))
+    {
+        // render(window);
+
+        glfwSwapBuffers(window);
+        glfwPollEvents();
+    }
+
+    // Array array;
+    //
+    // ArrayInit(&array, 16, 64);
+
+    for(int i = 0; i < 10000; ++i)
+    {
         printf("TEST   %d\n", i);
     }
 
+    glfwDestroyWindow(window);
+    glfwTerminate();
     return 0;
 }
