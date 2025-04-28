@@ -110,10 +110,10 @@ static void PrintHeader()
 {
     char timeBuffer[32];
     time_t t = time(NULL);
-    struct tm tm = { 0 };
-    localtime_s(&tm, &t);
+    // struct tm tm = { 0 };
+    // localtime_s(&tm, &t);
 
-    strftime(timeBuffer, 32, "%d-%m-%y %H:%M:%S", &tm);
+    strftime(timeBuffer, 32, "%d-%m-%y %H:%M:%S", localtime(&t));
 
     printf("%s ", timeBuffer);
 }

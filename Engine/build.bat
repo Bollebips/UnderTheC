@@ -14,8 +14,8 @@ SET compiler=clang
 SET assembly=UnderTheC
 SET compilerFlags=-g -shared -Wvarargs -Wall -Werror
 REM -Wall -Werror
-SET includeFlags=-Isrc -I../3rdParty/glfw-3.4/include
-SET linkerFlags=-luser32
+SET includeFlags=-Isrc -I../3rdParty/glfw-3.4/include -I../3rdParty/glew-2.1.0/include
+SET linkerFlags=-luser32 -L../3rdParty/glew-2.1.0/lib/Release/x64 -lglew32s
 SET defines=-DDEBUG -DUTCeEXPORT -D_CRT_SECURE_NO_WARNINGS
 
 ECHO "Building %assembly%%..."
