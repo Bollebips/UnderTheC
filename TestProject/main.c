@@ -11,9 +11,6 @@
 int width = 640;
 int height = 480;
 
-// const char* vertexShaderSource = "glsl(#version 150 core\nin vec2 position;void main(){gl_Position = vec4(position, 0.0, 1.0);})glsl";
-// const char* fragmentShaderSource = "glsl(#version 150 core out vec4 outColor;void main(){outColor = vec4(1.1, 1.0, 1.0, 1.0);})glsl";
-
 char* GetStringFromFile(const char* filePath)
 {
     FILE* file = fopen(filePath, "rb");
@@ -26,16 +23,18 @@ char* GetStringFromFile(const char* filePath)
     long length = ftell(file);
     fseek(file, 0L, SEEK_SET);
 
-char* result = malloc(length + 1);
-if(result != NULL)
-{
-fread(result, sizeof(char), length, file);
-fclose(file);
-}
-else
-{
-    LogError("Memory allocation failed for file %s", filePath);
-}
+    char* result = (char*)malloc(length + 1);
+    if(result != NULL)
+    {
+        fread(result, sizeof(char), length, file);
+        result[length] = '\0'; 
+        fclose(file);
+    }
+    else
+    {
+        LogError("Memory allocation failed for file %s", filePath);
+    }
+
     return result;
 }
 void GlfwErrorCallback(int error, const char* message)
@@ -45,7 +44,7 @@ void GlfwErrorCallback(int error, const char* message)
 
 void GlfwWindowCloseCallback(GLFWwindow* window)
 {
-    LogWarning("Closing window");
+    //Do whatever when closing the window
 }
 
 void GlfwKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
@@ -58,13 +57,13 @@ void GlfwKeyCallback(GLFWwindow* window, int key, int scancode, int action, int 
     }
 }
 
-int main(int argc, char** argv)
+int main()
 {
     glfwSetErrorCallback(GlfwErrorCallback);
 
     if(glfwInit() == false)
     {
-        LogError("WOOPS");
+        LogError("Failed to initialize glfw.");
         return 1;
     }
 
@@ -81,7 +80,7 @@ int main(int argc, char** argv)
     glfwSetWindowCloseCallback(window, GlfwWindowCloseCallback);
 
     glfwGetFramebufferSize(window, &width, &height);
-    // glViewport(0, 0, width, height);
+    glViewport(-1, 0, width, height);
 
     glfwSetKeyCallback(window, GlfwKeyCallback);
 
@@ -105,11 +104,8 @@ int main(int argc, char** argv)
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    const char* vertexShaderSource = GetStringFromFile("bin/vertexShader.glsl");
-    const char* fragmentShaderSource = GetStringFromFile("bin/fragmentShader.glsl");
-
-LogInfo(vertexShaderSource);
-LogInfo(fragmentShaderSource);
+    const char* vertexShaderSource = GetStringFromFile("vertexShader.glsl");
+    const char* fragmentShaderSource = GetStringFromFile("fragmentShader.glsl");
 
     GLint vertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
@@ -139,18 +135,15 @@ LogInfo(fragmentShaderSource);
     glVertexAttribPointer(positionAttribute, 2, GL_FLOAT, GL_FALSE, 0, 0);
     glEnableVertexAttribArray(positionAttribute);
 
-
     while (!glfwWindowShouldClose(window))
     {
-        // render(window);
-
         glDrawArrays(GL_TRIANGLES, 0, 3);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
-    LogInfo("Succes!");
+    LogInfo("Success!");
 
     glfwDestroyWindow(window);
     glfwTerminate();
