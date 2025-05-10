@@ -6,7 +6,7 @@
 //#include <Logger.h>
 
 #define GLEW_STATIC
-#include <GL/glew.h>
+#include <glew.h>
 #include <glfw3.h>
 //#define GLFW_STATIC
 //#include <GLFW/glfw3.h>
