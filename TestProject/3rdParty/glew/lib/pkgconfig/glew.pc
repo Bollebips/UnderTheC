@@ -1,0 +1,11 @@
+prefix=/home/laurens/dev/src/UnderTheC/TestProject/3rdParty/glew
+exec_prefix=${prefix}
+libdir=/home/laurens/dev/src/UnderTheC/TestProject/3rdParty/glew/lib
+includedir=${prefix}/include
+
+Name: glew
+Description: The OpenGL Extension Wrangler library
+Version: 2.2.0
+Cflags: -I${includedir} 
+Libs: -L${libdir} -lGLEW 
+Requires: glu
