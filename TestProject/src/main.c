@@ -2,14 +2,11 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-//#include <Containers/Array.h>
-//#include <Logger.h>
+#include <Containers/Array.h>
+#include <Logger.h>
 
-#define GLEW_STATIC
-#include <glew.h>
-#include <glfw3.h>
-//#define GLFW_STATIC
-//#include <GLFW/glfw3.h>
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
 
 int width = 640;
 int height = 480;
@@ -19,9 +16,8 @@ char* GetStringFromFile(const char* filePath)
     FILE* file = fopen(filePath, "rb");
     if(file == NULL)
     {
-        //LogError("Unable to open file at path %s", filePath);
-	printf("Unable to open file at path %s\n", filePath);
-	return NULL;
+        LogError("Unable to open file at path %s", filePath);
+        return NULL;
     }
 
     fseek(file, 0L, SEEK_END);
@@ -37,17 +33,16 @@ char* GetStringFromFile(const char* filePath)
     }
     else
     {
-        //LogError("Memory allocation failed for file %s", filePath);
-        printf("Memory allocation failed for file %s\n", filePath);
-	return NULL;
+        LogError("Memory allocation failed for file %s", filePath);
+        return NULL;
     }
 
     return result;
 }
+
 void GlfwErrorCallback(int error, const char* message)
 {
-    //LogError("GLFW error: %s", message);
-    printf("GLFW error: %s", message);
+    LogError("GLFW error: %s", message);
 }
 
 void GlfwWindowCloseCallback(GLFWwindow* window)
@@ -57,9 +52,6 @@ void GlfwWindowCloseCallback(GLFWwindow* window)
 
 void GlfwKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-    //LogInfo("%d", key);
-    printf("%d", key);
-
     if(key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
     {
         glfwSetWindowShouldClose(window, GL_TRUE);
@@ -72,18 +64,17 @@ int main()
 
     if(glfwInit() == false)
     {
-        //LogError("Failed to initialize glfw.");
-        printf("Failed to initialize glfw.");
+        LogError("Failed to initialize glfw.");
         return 1;
     }
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
     GLFWwindow* window = glfwCreateWindow(width, height, "My Title", NULL, NULL);
-    //LogAssert(window != NULL, "GLFW window creation failed.");
+    LogAssert(window != NULL, "GLFW window creation failed.");
 
     glfwMakeContextCurrent(window);
 
@@ -125,7 +116,6 @@ int main()
     glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &shaderCompileStatus);
     char statusLog[512];
     glGetShaderInfoLog(vertexShader, 512, NULL, statusLog);
-    //LogInfo(statusLog);
 
     GLint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
@@ -153,8 +143,7 @@ int main()
         glfwPollEvents();
     }
 
-    //LogInfo("Success!");
-    printf("Success!");
+    LogInfo("Success!");
 
     glfwDestroyWindow(window);
     glfwTerminate();

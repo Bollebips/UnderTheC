@@ -5,7 +5,8 @@ cmake_minimum_required(VERSION 3.16)
 #    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 #endif()
 
-set(3rdPartyFolder ${CMAKE_CURRENT_SOURCE_DIR}/3rdParty CACHE STRING "" FORCE)
+set(UTCE_INSTALL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../Engine)
+set(UTCE_LIB_PATH ${UTCE_INSTALL_DIR}/build/libUTCe.so)
 
 set(GLEW_INSTALL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/3rdParty/glew)
 set(GLEW_LIB_PATH ${GLEW_INSTALL_DIR}/lib/libGLEW.so)
@@ -56,10 +57,10 @@ ExternalProject_Add(
     glew
     PREFIX glew
     GIT_REPOSITORY https://github.com/nigels-com/glew.git
-    GIT_TAG        master  # You can pin to a specific tag like 'glew-2.2.0'
+    GIT_TAG        master 
     UPDATE_COMMAND ""  # Avoid updating every time
     CONFIGURE_COMMAND 
-    ${CMAKE_COMMAND} -E chdir <SOURCE_DIR>/auto make &&                     # Step 1: run make in auto/
+    ${CMAKE_COMMAND} -E chdir <SOURCE_DIR>/auto make && # run make in auto/ to generate include files
     ${CMAKE_COMMAND} -S <SOURCE_DIR>/build/cmake -B <BINARY_DIR> -DCMAKE_INSTALL_PREFIX=${GLEW_INSTALL_DIR}
     #BUILD_ALWAYS 1 (Might want to enable this again if 3rdparty folder is removed.)
 )
@@ -71,8 +72,7 @@ ExternalProject_Add(
     GIT_TAG        3.4  # You can pin to a specific tag like 'glew-2.2.0'
     UPDATE_COMMAND ""  # Avoid updating every time
     CONFIGURE_COMMAND 
-    #${CMAKE_COMMAND} -E chdir <SOURCE_DIR>/auto make &&                     # Step 1: run make in auto/
-    ${CMAKE_COMMAND} -S <SOURCE_DIR> -B <BINARY_DIR> -DCMAKE_INSTALL_PREFIX=${GLFW_INSTALL_DIR} -D BUILD_SHARED_LIBS=ON
+    ${CMAKE_COMMAND} -S <SOURCE_DIR> -B <BINARY_DIR> -DCMAKE_INSTALL_PREFIX=${GLFW_INSTALL_DIR} -DBUILD_SHARED_LIBS=ON
     #BUILD_ALWAYS 1 (Might want to enable this again if 3rdparty folder is removed.)
 )
 # Define the directories where the GLEW headers and libraries will be located
@@ -81,12 +81,6 @@ ExternalProject_Add(
 # Specify where to copy the GLEW headers and libraries
 #set(GLEW_INCLUDE_DIR ${binary_dir}/include)
 #set(GLEW_LIBRARY_DIR ${binary_dir}/lib)
-
-# Copy headers and libraries into your project's directories
-#add_custom_command(TARGET glew POST_BUILD
-#    COMMAND ${CMAKE_COMMAND} -E copy_directory ${GLEW_INCLUDE_DIR} ${CMAKE_BINARY_DIR}/include/glew
-#    COMMAND ${CMAKE_COMMAND} -E copy ${GLEW_LIBRARY_DIR}/libGLEW.a ${CMAKE_BINARY_DIR}/lib/    # or libGLEW.so
-#)
 
 # Optionally, link the GLEW library in your project
 #add_library(glew_external STATIC IMPORTED)
@@ -99,29 +93,32 @@ ExternalProject_Add(
 
 # Define an imported shared library target for GLEW
 add_library(glew_shared SHARED IMPORTED GLOBAL)
-file(MAKE_DIRECTORY ${GLEW_INSTALL_DIR}/include/GL)
+file(MAKE_DIRECTORY ${GLEW_INSTALL_DIR}/include)
 set_target_properties(glew_shared PROPERTIES
     IMPORTED_LOCATION ${GLEW_LIB_PATH}
-    INTERFACE_INCLUDE_DIRECTORIES ${GLEW_INSTALL_DIR}/include/GL
+    INTERFACE_INCLUDE_DIRECTORIES ${GLEW_INSTALL_DIR}/include
 )
 
 add_library(glfw_shared SHARED IMPORTED GLOBAL)
-file(MAKE_DIRECTORY ${GLFW_INSTALL_DIR}/include/GLFW)
 set_target_properties(glfw_shared PROPERTIES
 	IMPORTED_LOCATION ${GLFW_LIB_PATH}
-	INTERFACE_INCLUDE_DIRECTORIES ${GLFW_INSTALL_DIR}/include/GLFW
+	INTERFACE_INCLUDE_DIRECTORIES ${GLFW_INSTALL_DIR}/include
 )
 
 add_dependencies(glew_shared glew)
 add_dependencies(glfw_shared glfw)
 
-# Make sure GLEW is built before your main target tries to use it
-
 find_package(OpenGL REQUIRED)
 
-add_Executable(TestProject main.c)
 
-target_include_directories(TestProject PUBLIC ${GLEW_INSTALL_DIR}/include/GL)
-target_include_directories(TestProject PUBLIC ${GLFW_INSTALL_DIR}/include/GLFW)
-#target_link_libraries(TestProject PRIVATE GLEW::GLEW)
-target_link_libraries(TestProject PUBLIC glew_shared glfw_shared ${OPENGL_LIBRARIES})
+add_Executable(TestProject src/main.c)
+
+add_subdirectory(${UTCE_INSTALL_DIR} UTC_Engine)
+#set(CMAKE_BUILD_TYPE DEBUG)
+target_compile_definitions(UTCe PUBLIC DEBUG)
+
+# TODO: Change this so we use an include folder instead of src
+target_include_directories(TestProject PUBLIC ${UTCE_INSTALL_DIR}/src)
+target_include_directories(TestProject PUBLIC ${GLEW_INSTALL_DIR}/include)
+target_include_directories(TestProject PUBLIC ${GLFW_INSTALL_DIR}/include)
+target_link_libraries(TestProject PUBLIC UTCe glew_shared glfw_shared OpenGL::GL)
