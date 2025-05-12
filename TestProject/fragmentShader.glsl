@@ -1,8 +1,10 @@
-#version 150 core
+#version 330 core
 
 out vec4 outColor;
 
+uniform vec4 customColor;
+
 void main()
 {
-    outColor = vec4(1.0, 0.0, 1.0, 1.0);
+    outColor = customColor;
 }
