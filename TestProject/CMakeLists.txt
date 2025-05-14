@@ -111,7 +111,8 @@ add_dependencies(glfw_shared glfw)
 find_package(OpenGL REQUIRED)
 
 
-add_Executable(TestProject src/main.c)
+file(GLOB_RECURSE SOURCE_FILES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c")
+add_Executable(TestProject ${SOURCE_FILES})
 
 add_subdirectory(${UTCE_INSTALL_DIR} UTC_Engine)
 #set(CMAKE_BUILD_TYPE DEBUG)

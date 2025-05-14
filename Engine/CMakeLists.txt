@@ -7,7 +7,6 @@ add_library(UTCe SHARED ${SOURCE_FILES})
 
 target_include_directories(UTCe PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
-
 # TODO: change the file structure like so, so we can export the library independant of the game project.
 #UnderTheC_Engine/
 #├── src/
