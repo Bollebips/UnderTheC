@@ -3,6 +3,9 @@
 #include <stdlib.h>
 
 #include <Logger.h>
+#include <Utils/FileIO.h>
+
+GLuint CreateComputeShader(const char*);
 
 void RendererGlfwFrameBufferSizeCallback(GLFWwindow* window, int width, int height)
 {
@@ -36,13 +39,30 @@ int RendererInit(Renderer* renderer)
     GLenum glewInitResult = glewInit();
     LogAssert(glewInitResult != GLEW_OK, "Glew did not initialize correctly.");
 
+    GLuint computeShaderHandle = CreateComputeShader("../voxelShader.glsl");
+
+    renderer->ShaderProgram = glCreateProgram();
+    glAttachShader(shaderProgram, comupteShaderHandle);
+    glLinkProgram(shaderProgram);
+
+    Texture texture = CreateTexture(width, height);
+    glBindImageTexture(0, texture.Handle, 0, GL_FALSE, GL_WRITE_ONLY, GL_RGBA32F);
+
     return EXIT_SUCCESS;
 }
 
 void Render(Renderer* renderer)
 {
     while (!glfwWindowShouldClose(renderer->Window))
-    { 
+    {
+        glClearColor(0, 0, 0, 1);
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        glUseProgram(renderer->ShaderProgram);
+        glDispatchCompute(renderer->Window.Width, renderer->Window.Height, 1);
+        //make ALL barriers wait until this compute shader is done.
+        glMemoryBarrier(GL_ALL_BARRIER_BITS);
+
         glfwSwapBuffers(renderer->Window);
         glfwPollEvents();
     }
@@ -52,4 +72,23 @@ void RendererCleanup(Renderer* renderer)
 {
     glfwDestroyWindow(renderer->Window);
     glfwTerminate();
+}
+
+GLuint CreateComputeShader(const char* shaderFilePath)
+{
+    char statusLog[512];
+    GLuint shaderCompileStatus;
+
+    const char* shaderSource = GetStringFromFile(shaderFilePath);
+    GLuint voxelShader = glCreateShader(GL_COMPUTE_SHADER);
+    glShaderSource(voxelShader, 1, &shaderSource, NULL);
+    free((char*) shaderSource);
+    glCompileShader(voxelShader);
+
+    glGetShaderiv(voxelShader, GL_COMPILE_STATUS, &shaderCompileStatus);
+    if(shaderCompileStatus == false)
+    {
+        glGetShaderInfoLog(voxelShader, 512, NULL, statusLog);
+        LogError("ComputeShader compilation failed: %s", statusLog);
+    }
 }

@@ -3,8 +3,7 @@
 
 #include <stdio.h>
 
-
-char* GetStringFromFile(const char* filePath)
+const char* GetStringFromFile(const char* filePath)
 {
     FILE* file = fopen(filePath, "rb");
 
