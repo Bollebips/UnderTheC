@@ -1,4 +1,5 @@
-﻿#pragma once
+﻿#ifndef DEFINES_H
+#define DEFINES_H
 
 // Unsigned int types.
 typedef unsigned char u8;
@@ -25,6 +26,12 @@ typedef char b8;
 #define STATIC_ASSERT _Static_assert
 #else
 #define STATIC_ASSERT static_assert
+#endif
+
+#ifdef _MSC_VER
+    #include <malloc.h>
+#else
+    #include <alloca.h>
 #endif
 
 // Ensure all types are of the correct size.
@@ -94,3 +101,5 @@ typedef char b8;
         #define UTCeAPI
     #endif
 #endif
+
+#endif //DEFINES_H

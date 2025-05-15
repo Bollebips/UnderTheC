@@ -9,10 +9,20 @@ set(UTCE_INSTALL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../Engine)
 set(UTCE_LIB_PATH ${UTCE_INSTALL_DIR}/build/libUTCe.so)
 
 set(GLEW_INSTALL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/3rdParty/glew)
-set(GLEW_LIB_PATH ${GLEW_INSTALL_DIR}/lib/libGLEW.so)
+if(WIN32)
+    set(GLEW_DYNAMIC_LIB_PATH ${GLEW_INSTALL_DIR}/bin/glew32.dll)
+    set(GLEW_STATIC_LIB_PATH ${GLEW_INSTALL_DIR}/lib/glew32.lib)
+else()
+    set(GLEW_DYNAMIC_LIB_PATH ${GLEW_INSTALL_DIR}/lib/libGLEW.so)
+endif()
 
 set(GLFW_INSTALL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/3rdParty/glfw)
-set(GLFW_LIB_PATH ${GLFW_INSTALL_DIR}/lib/libglfw.so)
+if(WIN32)
+    set(GLFW_DYNAMIC_LIB_PATH ${GLFW_INSTALL_DIR}/lib/libglfw.dll)
+    set(GLFW_STATIC_LIB_PATH ${GLFW_INSTALL_DIR}/lib/glfw3dll.lib)
+else()
+    set(GLFW_DYNAMIC_LIB_PATH ${GLFW_INSTALL_DIR}/lib/libglfw.so)
+endif()
 
 # exclude unnecessary folders from glfw (samples, tests, docs, ...)
 #set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
@@ -53,17 +63,35 @@ include(ExternalProject)
 #link_libraries(${GLEW_LIBRARIES})
 
 #TODO: Only do this on linux
-ExternalProject_Add(
-    glew
-    PREFIX glew
-    GIT_REPOSITORY https://github.com/nigels-com/glew.git
-    GIT_TAG        master 
-    UPDATE_COMMAND ""  # Avoid updating every time
-    CONFIGURE_COMMAND 
-    ${CMAKE_COMMAND} -E chdir <SOURCE_DIR>/auto make && # run make in auto/ to generate include files
-    ${CMAKE_COMMAND} -S <SOURCE_DIR>/build/cmake -B <BINARY_DIR> -DCMAKE_INSTALL_PREFIX=${GLEW_INSTALL_DIR}
-    #BUILD_ALWAYS 1 (Might want to enable this again if 3rdparty folder is removed.)
-)
+if(WIN32)
+    ExternalProject_Add(
+        glew
+        PREFIX glew
+        URL https://github.com/nigels-com/glew/releases/download/glew-2.2.0/glew-2.2.0-win32.zip
+        DOWNLOAD_NAME glew-2.2.0-win32.zip
+        DOWNLOAD_DIR ${CMAKE_BINARY_DIR}/glew
+        DOWNLOAD_EXTRACT_TIMESTAMP OFF
+        SOURCE_DIR ${CMAKE_BINARY_DIR}/../3rdParty/glew
+        CONFIGURE_COMMAND ""
+        BUILD_COMMAND ""
+        INSTALL_COMMAND
+            ${CMAKE_COMMAND} -E copy_directory <SOURCE_DIR>/include ${GLEW_INSTALL_DIR}/include &&
+            ${CMAKE_COMMAND} -E copy_if_different <SOURCE_DIR>/lib/Release/x64/glew32.lib ${GLEW_INSTALL_DIR}/lib/ &&
+            ${CMAKE_COMMAND} -E copy_if_different <SOURCE_DIR>/bin/Release/x64/glew32.dll ${GLEW_INSTALL_DIR}/bin/
+    )
+else()
+    ExternalProject_Add(
+        glew
+        PREFIX glew
+        GIT_REPOSITORY https://github.com/nigels-com/glew.git
+        GIT_TAG        master
+        UPDATE_COMMAND ""  # Avoid updating every time
+        CONFIGURE_COMMAND
+        ${CMAKE_COMMAND} -E chdir <SOURCE_DIR>/auto make && # run make in auto/ to generate include files
+        ${CMAKE_COMMAND} -S <SOURCE_DIR>/build/cmake -B <BINARY_DIR> -DCMAKE_INSTALL_PREFIX=${GLEW_INSTALL_DIR}
+        #BUILD_ALWAYS 1 (Might want to enable this again if 3rdparty folder is removed.)
+    )
+endif()
 
 ExternalProject_Add(
     glfw
@@ -94,22 +122,38 @@ ExternalProject_Add(
 # Define an imported shared library target for GLEW
 add_library(glew_shared SHARED IMPORTED GLOBAL)
 file(MAKE_DIRECTORY ${GLEW_INSTALL_DIR}/include)
-set_target_properties(glew_shared PROPERTIES
-    IMPORTED_LOCATION ${GLEW_LIB_PATH}
-    INTERFACE_INCLUDE_DIRECTORIES ${GLEW_INSTALL_DIR}/include
-)
+if(WIN32)
+    set_target_properties(glew_shared PROPERTIES
+        IMPORTED_IMPLIB ${GLEW_STATIC_LIB_PATH}
+        IMPORTED_LOCATION ${GLEW_DYNAMIC_LIB_PATH}
+        INTERFACE_INCLUDE_DIRECTORIES ${GLEW_INSTALL_DIR}/include
+    )
+else()
+    set_target_properties(glew_shared PROPERTIES
+        IMPORTED_LOCATION ${GLEW_DYNAMIC_LIB_PATH}
+        INTERFACE_INCLUDE_DIRECTORIES ${GLEW_INSTALL_DIR}/include
+    )
+endif()
 
 add_library(glfw_shared SHARED IMPORTED GLOBAL)
-set_target_properties(glfw_shared PROPERTIES
-	IMPORTED_LOCATION ${GLFW_LIB_PATH}
-	INTERFACE_INCLUDE_DIRECTORIES ${GLFW_INSTALL_DIR}/include
-)
+file(MAKE_DIRECTORY ${GLFW_INSTALL_DIR}/include)
+if(WIN32)
+    set_target_properties(glfw_shared PROPERTIES
+        IMPORTED_IMPLIB ${GLFW_STATIC_LIB_PATH}
+        IMPORTED_LOCATION ${GLFW_DYNAMIC_LIB_PATH}
+        INTERFACE_INCLUDE_DIRECTORIES ${GLFW_INSTALL_DIR}/include
+    )
+else()
+    set_target_properties(glfw_shared PROPERTIES
+        IMPORTED_LOCATION ${GLFW_DYNAMIC_LIB_PATH}
+        INTERFACE_INCLUDE_DIRECTORIES ${GLFW_INSTALL_DIR}/include
+    )
+endif()
 
 add_dependencies(glew_shared glew)
 add_dependencies(glfw_shared glfw)
 
 find_package(OpenGL REQUIRED)
-
 
 add_Executable(TestProject src/main.c)
 

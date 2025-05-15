@@ -59,6 +59,7 @@ endif()
 add_library(glfw SHARED IMPORTED)
 
 set_target_properties(glfw PROPERTIES
+  INTERFACE_COMPILE_DEFINITIONS "GLFW_DLL"
   INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include"
 )
 
