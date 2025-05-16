@@ -68,7 +68,7 @@ void Render(Renderer* renderer)
 
         glUseProgram(renderer->ShaderProgram);
         glBindImageTexture(0, renderer->Texture.Handle, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
-        glDispatchCompute(width, height, 1);
+        glDispatchCompute(width / 16, height / 16, 1);
         //make ALL barriers wait until this compute shader is done.
         glMemoryBarrier(GL_ALL_BARRIER_BITS);
 
