@@ -69,6 +69,16 @@ void main()
         {
             hit = true;
             hitNormal = normalize(rayOrigin - sphereCenter);
+            vec3 absoluteNormal = abs(hitNormal);
+            float maxComponent = max(max(absoluteNormal.x, absoluteNormal.y), absoluteNormal.z);
+            vec3 normal = vec3
+            (
+                step(maxComponent, absoluteNormal.x) * sign(hitNormal.x),
+                step(maxComponent, absoluteNormal.y) * sign(hitNormal.y),
+                step(maxComponent, absoluteNormal.z) * sign(hitNormal.z)
+            );
+    
+            hitNormal = normalize(normal);
             break;
         }
 
