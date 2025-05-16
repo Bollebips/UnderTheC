@@ -1,15 +1,16 @@
 #version 460 core
 
 uniform vec3 cameraPos = vec3(0, 1, 0);
-uniform vec3 cameraForward = vec3(0, 0, 1);
-uniform float collisionDistance = 0.01;
+uniform vec3 cameraForward;
+uniform float collisionDistance = 0.001;
 uniform int maxSteps = 32;
 uniform float maxDistance = 10;
 
 layout (local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
 layout (rgba32f, binding = 0) uniform writeonly image2D renderTarget;
 
-float DistanceFromSphere(vec3 sphereCenter, float sphereRadius, vec3 point);
+float SignedDistanceFromSphere(vec3 sphereCenter, float sphereRadius, vec3 point);
+float SignedDistanceFromCube(vec3 cubeCenter, float cubeSize, vec3 point);
 bool HitSphere(vec3 sphereCenter, float sphereRadius, vec3 rayOrigin, vec3 rayDirection);
 
 void main()
@@ -58,13 +59,16 @@ void main()
     float distance;
     float totalDistance = 0;
     bool hit = false;
+    vec3 hitNormal;
 
     while(totalDistance < maxDistance)
     {
-        distance = DistanceFromSphere(sphereCenter, sphereRadius, rayOrigin);
+        /* distance = SignedDistanceFromSphere(sphereCenter, sphereRadius, rayOrigin); */
+        distance = SignedDistanceFromCube(sphereCenter, sphereRadius, rayOrigin);
         if(distance < collisionDistance)
         {
             hit = true;
+            hitNormal = normalize(rayOrigin - sphereCenter);
             break;
         }
 
@@ -78,23 +82,31 @@ void main()
 
     vec4 color = mix(vec4(1.0, 1.0, 1.0, 1.0), vec4(0, 0, 1.0, 1.0), 0.5 * (rayDirection.y + 1.0));
 
-    if(hit)
+    if(hit && distance > 0)
     {
-        imageStore(renderTarget, pixelCoord, color);
+        imageStore(renderTarget, pixelCoord, vec4(0.5 * (hitNormal + vec3(1,1,1)), 1.0));
     }
     else if(stepCount > 20)
     {
         imageStore(renderTarget, pixelCoord, vec4(1,1,1,1));
-        /* imageStore(renderTarget, pixelCoord, vec4(1,1,1,1) * (float(stepCount) / float(maxSteps))); */
+        /* imageStore(renderTarget, pixelCoord, vec4(1,1,1,1) * 1.0 - ((float(stepCount) / float(maxSteps)))); */
     }
     /* imageStore(renderTarget, pixelCoord, vec4(pixelPos.x / (viewportWidth * 0.5), pixelPos.y / (viewportHeight * 0.5), 0.0, 0.1)); */
     /* imageStore(renderTarget, pixelCoord, vec4((14.0 - distance), (14.0 - distance), 0.0, 0.1)); */
     /* imageStore(renderTarget, pixelCoord, vec4(gl_LocalInvocationID.x/16.0, gl_LocalInvocationID.y/16.0, 0.0, 1.0)); */
 }
 
-float DistanceFromSphere(vec3 sphereCenter, float sphereRadius, vec3 point)
+float SignedDistanceFromSphere(vec3 sphereCenter, float sphereRadius, vec3 point)
 {
     return distance(sphereCenter, point) - sphereRadius;
+}
+
+float SignedDistanceFromCube(vec3 cubeCenter, float cubeHalfWidth, vec3 point)
+{
+    point -= cubeCenter; // ->to origin
+    vec3 distance = abs(point) - (vec3(1,1,1) * cubeHalfWidth);
+    float maxComponent = max(max(distance.x, distance.y), distance.z);
+    return length(max(distance, 0.0)) + min(maxComponent, 0.0);
 }
 
 bool HitSphere(vec3 sphereCenter, float sphereRadius, vec3 rayOrigin, vec3 rayDirection)

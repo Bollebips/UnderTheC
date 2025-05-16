@@ -61,7 +61,8 @@ int RendererInit(Renderer* renderer)
 
 void Render(Renderer* renderer)
 {
-    renderer->Camera.Position = (Vec3f){0, 0, -2};
+    renderer->Camera.Position = (Vec3f){0, 0, 2};
+    renderer->Camera.Forward = (Vec3f){0, 0, -1};
     renderer->Camera.Speed = 0.01f;
 
     while (!glfwWindowShouldClose(renderer->Window))
@@ -78,8 +79,12 @@ void Render(Renderer* renderer)
         glfwGetFramebufferSize(renderer->Window, &width, &height);
 
         glUseProgram(renderer->ShaderProgram);
+
         GLint cameraPosAttribute = glGetUniformLocation(renderer->ShaderProgram, "cameraPos");
         glUniform3fv(cameraPosAttribute, 1, (const GLfloat*)&renderer->Camera.Position);
+        GLint cameraForwardAttribute = glGetUniformLocation(renderer->ShaderProgram, "cameraForward");
+        glUniform3fv(cameraForwardAttribute, 1, (const GLfloat*)&renderer->Camera.Forward);
+
         glBindImageTexture(0, renderer->Texture.Handle, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
         glDispatchCompute(width / 16, height / 16, 1);
         //make ALL barriers wait until this compute shader is done.
