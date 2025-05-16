@@ -2,6 +2,9 @@
 
 uniform vec3 cameraPos = vec3(0, 1, 0);
 uniform vec3 cameraForward = vec3(0, 0, 1);
+uniform float collisionDistance = 0.01;
+uniform int maxSteps = 32;
+uniform float maxDistance = 10;
 
 layout (local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
 layout (rgba32f, binding = 0) uniform writeonly image2D renderTarget;
@@ -11,9 +14,12 @@ bool HitSphere(vec3 sphereCenter, float sphereRadius, vec3 rayOrigin, vec3 rayDi
 
 void main()
 {
+    vec2 dimensions = imageSize(renderTarget);
     ivec2 pixelCoord = ivec2(gl_GlobalInvocationID.xy);
 
-    vec2 dimensions = imageSize(renderTarget);
+    // BOUNDS CHECK
+    /* if (pixelCoord.x >= dimensions.x || pixelCoord.y >= dimensions.y) */
+        /* return; */
     /* float aspectRatio = dimensions.x / dimensions.y; */
 
     float x = -(float(pixelCoord.x * 2 - dimensions.x) / dimensions.x); //[-1, 1]
@@ -46,15 +52,40 @@ void main()
     vec3 rayDirection = normalize(pixelPos - cameraPos);
 
     float sphereRadius = 0.5;
-    vec3 sphereCenter = vec3(0,0,1);
+    vec3 sphereCenter = vec3(0,0,0);
 
-    /* float distance = DistanceFromSphere(origin, 0.5, rayOrigin); */
+    int stepCount = 0;
+    float distance;
+    float totalDistance = 0;
+    bool hit = false;
+
+    while(totalDistance < maxDistance)
+    {
+        distance = DistanceFromSphere(sphereCenter, sphereRadius, rayOrigin);
+        if(distance < collisionDistance)
+        {
+            hit = true;
+            break;
+        }
+
+        rayOrigin += distance * rayDirection;
+        totalDistance += distance;
+
+        stepCount++;
+    }
+
+    /* HitSphere(sphereCenter, sphereRadius, rayOrigin, rayDirection); */
 
     vec4 color = mix(vec4(1.0, 1.0, 1.0, 1.0), vec4(0, 0, 1.0, 1.0), 0.5 * (rayDirection.y + 1.0));
 
-    if(HitSphere(sphereCenter, sphereRadius, rayOrigin, rayDirection))
+    if(hit)
     {
         imageStore(renderTarget, pixelCoord, color);
+    }
+    else if(stepCount > 20)
+    {
+        imageStore(renderTarget, pixelCoord, vec4(1,1,1,1));
+        /* imageStore(renderTarget, pixelCoord, vec4(1,1,1,1) * (float(stepCount) / float(maxSteps))); */
     }
     /* imageStore(renderTarget, pixelCoord, vec4(pixelPos.x / (viewportWidth * 0.5), pixelPos.y / (viewportHeight * 0.5), 0.0, 0.1)); */
     /* imageStore(renderTarget, pixelCoord, vec4((14.0 - distance), (14.0 - distance), 0.0, 0.1)); */

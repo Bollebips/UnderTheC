@@ -79,7 +79,7 @@ void Render(Renderer* renderer)
 
         glUseProgram(renderer->ShaderProgram);
         GLint cameraPosAttribute = glGetUniformLocation(renderer->ShaderProgram, "cameraPos");
-        glUniform3f(cameraPosAttribute, renderer->Camera.Position.x, renderer->Camera.Position.y, renderer->Camera.Position.z);
+        glUniform3fv(cameraPosAttribute, 1, (const GLfloat*)&renderer->Camera.Position);
         glBindImageTexture(0, renderer->Texture.Handle, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
         glDispatchCompute(width / 16, height / 16, 1);
         //make ALL barriers wait until this compute shader is done.
