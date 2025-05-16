@@ -41,12 +41,14 @@ int RendererInit(Renderer* renderer)
 
     GLuint computeShaderHandle = CreateComputeShader("../voxelShader.glsl");
 
-    renderer->ShaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, comupteShaderHandle);
+    GLuint shaderProgram = glCreateProgram();
+    glAttachShader(shaderProgram, computeShaderHandle);
     glLinkProgram(shaderProgram);
+    renderer->ShaderProgram = shaderProgram;
 
-    Texture texture = CreateTexture(width, height);
-    glBindImageTexture(0, texture.Handle, 0, GL_FALSE, GL_WRITE_ONLY, GL_RGBA32F);
+    renderer->Texture = CreateTexture(width, height);
+
+    renderer->Framebuffer = CreateFramebufferWithTexture(&renderer->Texture);
 
     return EXIT_SUCCESS;
 }
@@ -58,10 +60,19 @@ void Render(Renderer* renderer)
         glClearColor(0, 0, 0, 1);
         glClear(GL_COLOR_BUFFER_BIT);
 
+        int width, height;
+
+        // TODO: Handle resizing
+
+        glfwGetFramebufferSize(renderer->Window, &width, &height);
+
         glUseProgram(renderer->ShaderProgram);
-        glDispatchCompute(renderer->Window.Width, renderer->Window.Height, 1);
+        glBindImageTexture(0, renderer->Texture.Handle, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+        glDispatchCompute(width, height, 1);
         //make ALL barriers wait until this compute shader is done.
         glMemoryBarrier(GL_ALL_BARRIER_BITS);
+
+        BlitFramebufferToSwapchain(renderer->Framebuffer, &renderer->Texture);
 
         glfwSwapBuffers(renderer->Window);
         glfwPollEvents();
@@ -91,4 +102,31 @@ GLuint CreateComputeShader(const char* shaderFilePath)
         glGetShaderInfoLog(voxelShader, 512, NULL, statusLog);
         LogError("ComputeShader compilation failed: %s", statusLog);
     }
+}
+
+const GLuint CreateFramebufferWithTexture(const Texture* texture)
+{
+    GLuint result;
+    glCreateFramebuffers(1, &result);
+
+    glNamedFramebufferTexture(result, GL_COLOR_ATTACHMENT0, texture->Handle, 0);
+
+    if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+    {
+        LogError("Failed to create framebuffer.");
+        glDeleteFramebuffers(1, &result);
+        return 0;
+    }
+
+    return result;
+}
+
+void BlitFramebufferToSwapchain(const GLuint framebuffer, const Texture* texture)
+{
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, framebuffer);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+
+    glBlitFramebuffer(0, 0, texture->Width, texture->Height,
+                      0, 0, texture->Width, texture->Height,
+                      GL_COLOR_BUFFER_BIT, GL_NEAREST);
 }
