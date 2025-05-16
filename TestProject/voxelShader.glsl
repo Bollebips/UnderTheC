@@ -1,5 +1,8 @@
 #version 460 core
 
+uniform vec3 cameraPos = vec3(0, 1, 0);
+uniform vec3 cameraForward = vec3(0, 0, 1);
+
 layout (local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
 layout (rgba32f, binding = 0) uniform writeonly image2D renderTarget;
 
@@ -20,24 +23,27 @@ void main()
 
     //Camera
     /* vec3 cameraPos = vec3(10.0, 10.0, 10.0); */
-    vec3 cameraPos = vec3(0, 0, 0);
-    /* vec3 cameraForward = normalize(origin - cameraPos); */
-    /* float fov = 90.0; */
-    float focalLength = 1.0;
+    vec3 worldUp = vec3(0, 1, 0);
+    /* vec3 cameraLookTarget = vec3(0, 0.5, 1.0); */
+    /* vec3 cameraForward = normalize(cameraLookTarget - cameraPos); */
+    vec3 cameraRight = normalize(cross(worldUp, cameraForward));
+    vec3 cameraUp = cross(cameraForward, cameraRight);
+    float fov = 90.0;
+    float focalLength = 1.0; //distance between camera origin and viewport
 
     //Viewport
     float viewportHeight = 2.0f;
     float viewportWidth = viewportHeight * (dimensions.x / dimensions.y); //2.6
-    vec3 viewportU = vec3(viewportWidth, 0, 0); //(2.0, 0.0, 0.0)
-    vec3 viewportV = vec3(0, viewportHeight, 0); //(0.0, -2.6, 0.0)
+    vec3 viewportU = viewportWidth * cameraRight; //(2.0, 0.0, 0.0)
+    vec3 viewportV = viewportHeight * cameraUp; //(0.0, -2.6, 0.0)
     vec3 pixelDeltaU = viewportU / dimensions.x;
     vec3 pixelDeltaV = viewportV / dimensions.y;
-    vec3 viewportUpperLeft = cameraPos + vec3(0, 0, focalLength) - viewportU / 2.0 - viewportV / 2.0;
+    vec3 viewportUpperLeft = cameraPos + focalLength * cameraForward - viewportU / 2.0 - viewportV / 2.0;
     vec3 pixel00Pos = viewportUpperLeft + 0.5 * (pixelDeltaU + pixelDeltaV);
     vec3 pixelPos = pixel00Pos + (pixelCoord.x * pixelDeltaU) + (pixelCoord.y * pixelDeltaV);
 
     vec3 rayOrigin = pixelPos;
-    vec3 rayDirection = pixelPos - cameraPos;
+    vec3 rayDirection = normalize(pixelPos - cameraPos);
 
     float sphereRadius = 0.5;
     vec3 sphereCenter = vec3(0,0,1);

@@ -4,8 +4,12 @@
 
 #include <Logger.h>
 #include <Utils/FileIO.h>
+#include <Math/Vec3f.h>
 
-GLuint CreateComputeShader(const char*);
+static GLuint CreateComputeShader(const char*);
+static void GlfwKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
+
+static bool MoveUp, MoveDown, MoveLeft, MoveRight, MoveForward, MoveBackward = false;
 
 void RendererGlfwFrameBufferSizeCallback(GLFWwindow* window, int width, int height)
 {
@@ -29,6 +33,8 @@ int RendererInit(Renderer* renderer)
     int height = 480;
     renderer->Window = glfwCreateWindow(width, height, "Voxel renderer", NULL, NULL);
     LogAssert(renderer->Window != NULL, "GLFW window creation failed.");
+
+    glfwSetKeyCallback(renderer->Window, GlfwKeyCallback);
 
     glfwMakeContextCurrent(renderer->Window);
     
@@ -55,8 +61,13 @@ int RendererInit(Renderer* renderer)
 
 void Render(Renderer* renderer)
 {
+    renderer->Camera.Position = (Vec3f){0, 0, -2};
+    renderer->Camera.Speed = 0.01f;
+
     while (!glfwWindowShouldClose(renderer->Window))
     {
+        CameraProcessInput(&renderer->Camera, MoveForward, MoveBackward, MoveLeft, MoveRight, MoveUp, MoveDown);
+
         glClearColor(0, 0, 0, 1);
         glClear(GL_COLOR_BUFFER_BIT);
 
@@ -67,6 +78,8 @@ void Render(Renderer* renderer)
         glfwGetFramebufferSize(renderer->Window, &width, &height);
 
         glUseProgram(renderer->ShaderProgram);
+        GLint cameraPosAttribute = glGetUniformLocation(renderer->ShaderProgram, "cameraPos");
+        glUniform3f(cameraPosAttribute, renderer->Camera.Position.x, renderer->Camera.Position.y, renderer->Camera.Position.z);
         glBindImageTexture(0, renderer->Texture.Handle, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
         glDispatchCompute(width / 16, height / 16, 1);
         //make ALL barriers wait until this compute shader is done.
@@ -85,7 +98,7 @@ void RendererCleanup(Renderer* renderer)
     glfwTerminate();
 }
 
-GLuint CreateComputeShader(const char* shaderFilePath)
+static GLuint CreateComputeShader(const char* shaderFilePath)
 {
     char statusLog[512];
     GLuint shaderCompileStatus;
@@ -129,4 +142,63 @@ void BlitFramebufferToSwapchain(const GLuint framebuffer, const Texture* texture
     glBlitFramebuffer(0, 0, texture->Width, texture->Height,
                       0, 0, texture->Width, texture->Height,
                       GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+}
+
+static void GlfwKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+    if(action == GLFW_PRESS)
+    {
+        switch(key)
+        {
+            case GLFW_KEY_ESCAPE:
+                glfwSetWindowShouldClose(window, true);
+                break;
+            case GLFW_KEY_W:
+                MoveForward = true;
+                break;
+            case GLFW_KEY_A:
+                MoveLeft = true;
+                break;
+            case GLFW_KEY_S:
+                MoveBackward = true;
+                break;
+            case GLFW_KEY_D:
+                MoveRight = true;
+                break;
+            case GLFW_KEY_Q:
+                MoveUp = true;
+                break;
+            case GLFW_KEY_E:
+                MoveDown = true;
+                break;
+        }
+    }
+    else if(action == GLFW_RELEASE)
+    {
+        switch(key)
+        {
+            case GLFW_KEY_W:
+                MoveForward = false;
+                break;
+            case GLFW_KEY_A:
+                MoveLeft = false;
+                break;
+            case GLFW_KEY_S:
+                MoveBackward = false;
+                break;
+            case GLFW_KEY_D:
+                MoveRight = false;
+                break;
+            case GLFW_KEY_Q:
+                MoveUp = false;
+                break;
+            case GLFW_KEY_E:
+                MoveDown = false;
+                break;
+        }
+    }
 }

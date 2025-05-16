@@ -5,9 +5,11 @@
 #include <GLFW/glfw3.h>
 
 #include "Texture.h"
+#include "Camera.h"
 
 typedef struct Renderer
 {
+    Camera Camera;
     GLFWwindow* Window;
     Texture Texture;
     GLuint ShaderProgram;
