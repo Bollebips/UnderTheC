@@ -61,8 +61,8 @@ int RendererInit(Renderer* renderer)
 
 void Render(Renderer* renderer)
 {
-    renderer->Camera.Position = (Vec3f){0, 0, 2};
-    renderer->Camera.Forward = (Vec3f){0, 0, -1};
+    renderer->Camera.Position = (Vec3f){0, 1, -1};
+    renderer->Camera.Forward = (Vec3f){0, 0, 1};
     renderer->Camera.Speed = 0.01f;
 
     while (!glfwWindowShouldClose(renderer->Window))

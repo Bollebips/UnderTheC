@@ -1,13 +1,27 @@
 #version 460 core
+#extension GL_ARB_gpu_shader_int64 : require
 
 uniform vec3 cameraPos = vec3(0, 1, 0);
 uniform vec3 cameraForward;
-uniform float collisionDistance = 0.001;
+uniform float collisionDistance = 0.0001;
 uniform int maxSteps = 32;
 uniform float maxDistance = 10;
 
+const int voxelBrickSize = 4;
+const uint64_t voxelBrick = 0xA5A5F000FF88FFFFul;
+//1010 0101 1010 0101;
+//1111 0000 0000 0000;
+//1111 1111 1000 1000;
+//1111 1111 1111 1111;
+
 layout (local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
 layout (rgba32f, binding = 0) uniform writeonly image2D renderTarget;
+
+struct Ray
+{
+    vec3 Origin;
+    vec3 Direction;
+};
 
 float SignedDistanceFromSphere(vec3 sphereCenter, float sphereRadius, vec3 point);
 float SignedDistanceFromCube(vec3 cubeCenter, float cubeSize, vec3 point);
@@ -18,28 +32,22 @@ void main()
     vec2 dimensions = imageSize(renderTarget);
     ivec2 pixelCoord = ivec2(gl_GlobalInvocationID.xy);
 
-    // BOUNDS CHECK
-    /* if (pixelCoord.x >= dimensions.x || pixelCoord.y >= dimensions.y) */
-        /* return; */
-    /* float aspectRatio = dimensions.x / dimensions.y; */
-
     float x = -(float(pixelCoord.x * 2 - dimensions.x) / dimensions.x); //[-1, 1]
     float y = -(float(pixelCoord.y * 2 - dimensions.y) / dimensions.y); //[-1, 1]
 
     vec3 origin = vec3(0,0,0);
 
     //Camera
-    /* vec3 cameraPos = vec3(10.0, 10.0, 10.0); */
+    // TODO: Move this out of the shader
     vec3 worldUp = vec3(0, 1, 0);
-    /* vec3 cameraLookTarget = vec3(0, 0.5, 1.0); */
-    /* vec3 cameraForward = normalize(cameraLookTarget - cameraPos); */
     vec3 cameraRight = normalize(cross(worldUp, cameraForward));
     vec3 cameraUp = cross(cameraForward, cameraRight);
     float fov = 90.0;
-    float focalLength = 1.0; //distance between camera origin and viewport
+    float focalLength = 0.01; //distance between camera origin and viewport
 
     //Viewport
-    float viewportHeight = 2.0f;
+    // TODO: Move this out of the shader
+    float viewportHeight = 0.02;
     float viewportWidth = viewportHeight * (dimensions.x / dimensions.y); //2.6
     vec3 viewportU = viewportWidth * cameraRight; //(2.0, 0.0, 0.0)
     vec3 viewportV = viewportHeight * cameraUp; //(0.0, -2.6, 0.0)
@@ -49,26 +57,51 @@ void main()
     vec3 pixel00Pos = viewportUpperLeft + 0.5 * (pixelDeltaU + pixelDeltaV);
     vec3 pixelPos = pixel00Pos + (pixelCoord.x * pixelDeltaU) + (pixelCoord.y * pixelDeltaV);
 
-    vec3 rayOrigin = pixelPos;
-    vec3 rayDirection = normalize(pixelPos - cameraPos);
+    Ray ray = Ray(pixelPos, normalize(pixelPos - cameraPos));
 
-    float sphereRadius = 0.5;
-    vec3 sphereCenter = vec3(0,0,0);
+    float cubeWidth = 1.0 / voxelBrickSize;
 
     int stepCount = 0;
-    float distance;
     float totalDistance = 0;
+    float minDistance = maxDistance;
     bool hit = false;
     vec3 hitNormal;
 
     while(totalDistance < maxDistance)
     {
-        /* distance = SignedDistanceFromSphere(sphereCenter, sphereRadius, rayOrigin); */
-        distance = SignedDistanceFromCube(sphereCenter, sphereRadius, rayOrigin);
+        float distance = maxDistance;
+        vec3 hitCubeCenter = vec3(0);
+
+        for(int i = 0; i < voxelBrickSize * voxelBrickSize * voxelBrickSize; ++i)
+        {
+            if(((1ul << i) & voxelBrick) == 0)
+            {
+                continue;
+            }
+
+            uvec3 cubeID = uvec3
+            (
+                i % voxelBrickSize,
+                (i / voxelBrickSize) / voxelBrickSize,
+                (i / voxelBrickSize) % voxelBrickSize
+            );
+
+            vec3 cubeCenter = vec3(0) + (cubeID * cubeWidth);
+            float newDistance = SignedDistanceFromCube(cubeCenter, cubeWidth, ray.Origin);
+
+            if(newDistance < distance)
+            {
+                distance = newDistance;
+                hitCubeCenter = cubeCenter;
+            } 
+
+            minDistance = min(distance, minDistance);
+        }
+
         if(distance < collisionDistance)
         {
             hit = true;
-            hitNormal = normalize(rayOrigin - sphereCenter);
+            hitNormal = normalize(ray.Origin - hitCubeCenter);
             vec3 absoluteNormal = abs(hitNormal);
             float maxComponent = max(max(absoluteNormal.x, absoluteNormal.y), absoluteNormal.z);
             vec3 normal = vec3
@@ -82,28 +115,22 @@ void main()
             break;
         }
 
-        rayOrigin += distance * rayDirection;
+        ray.Origin += distance * ray.Direction;
         totalDistance += distance;
 
         stepCount++;
     }
 
-    /* HitSphere(sphereCenter, sphereRadius, rayOrigin, rayDirection); */
+    vec4 color = mix(vec4(1.0, 1.0, 1.0, 1.0), vec4(0, 0, 1.0, 1.0), 0.5 * (ray.Direction.y + 1.0));
 
-    vec4 color = mix(vec4(1.0, 1.0, 1.0, 1.0), vec4(0, 0, 1.0, 1.0), 0.5 * (rayDirection.y + 1.0));
-
-    if(hit && distance > 0)
+    if(hit && totalDistance > 0)
     {
-        imageStore(renderTarget, pixelCoord, vec4(0.5 * (hitNormal + vec3(1,1,1)), 1.0));
+        imageStore(renderTarget, pixelCoord, vec4(0.5 * (hitNormal + 1.0), 1.0));
     }
-    else if(stepCount > 20)
+    else
     {
-        imageStore(renderTarget, pixelCoord, vec4(1,1,1,1));
-        /* imageStore(renderTarget, pixelCoord, vec4(1,1,1,1) * 1.0 - ((float(stepCount) / float(maxSteps)))); */
+        imageStore(renderTarget, pixelCoord, vec4(1) * (1.0 - minDistance));
     }
-    /* imageStore(renderTarget, pixelCoord, vec4(pixelPos.x / (viewportWidth * 0.5), pixelPos.y / (viewportHeight * 0.5), 0.0, 0.1)); */
-    /* imageStore(renderTarget, pixelCoord, vec4((14.0 - distance), (14.0 - distance), 0.0, 0.1)); */
-    /* imageStore(renderTarget, pixelCoord, vec4(gl_LocalInvocationID.x/16.0, gl_LocalInvocationID.y/16.0, 0.0, 1.0)); */
 }
 
 float SignedDistanceFromSphere(vec3 sphereCenter, float sphereRadius, vec3 point)
@@ -111,10 +138,10 @@ float SignedDistanceFromSphere(vec3 sphereCenter, float sphereRadius, vec3 point
     return distance(sphereCenter, point) - sphereRadius;
 }
 
-float SignedDistanceFromCube(vec3 cubeCenter, float cubeHalfWidth, vec3 point)
+float SignedDistanceFromCube(vec3 cubeCenter, float cubeWidth, vec3 point)
 {
     point -= cubeCenter; // ->to origin
-    vec3 distance = abs(point) - (vec3(1,1,1) * cubeHalfWidth);
+    vec3 distance = abs(point) - (cubeWidth / 2.0);
     float maxComponent = max(max(distance.x, distance.y), distance.z);
     return length(max(distance, 0.0)) + min(maxComponent, 0.0);
 }
