@@ -14,8 +14,6 @@
 
 int main()
 {
-    /* return Exercise(); */
-
     Renderer renderer;
 
     int rendererInitResult = RendererInit(&renderer);

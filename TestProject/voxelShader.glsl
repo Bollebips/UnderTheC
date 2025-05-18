@@ -5,7 +5,7 @@ uniform vec3 cameraPos = vec3(0, 1, 0);
 uniform vec3 cameraForward;
 uniform float collisionDistance = 0.0001;
 uniform int maxSteps = 32;
-uniform float maxDistance = 10;
+uniform float maxDistance = 50;
 
 const int voxelBrickSize = 4;
 const uint64_t voxelBrick = 0xA5A5F000FF88FFFFul;
@@ -42,7 +42,7 @@ void main()
     vec3 worldUp = vec3(0, 1, 0);
     vec3 cameraRight = normalize(cross(worldUp, cameraForward));
     vec3 cameraUp = cross(cameraForward, cameraRight);
-    float fov = 90.0;
+    float vFov = 90.0;
     float focalLength = 0.01; //distance between camera origin and viewport
 
     //Viewport
@@ -87,6 +87,9 @@ void main()
             );
 
             vec3 cubeCenter = vec3(0) + (cubeID * cubeWidth);
+
+            /* vec3 repetitiveRayOrigin = vec3(fract(ray.Origin.x) - 0.5, fract(ray.Origin.y) - 0.5, fract(ray.Origin.z) - 0.5); */
+            /* vec3 repetitiveRayOrigin = vec3(mod(ray.Origin.x, 2.0) - 1.0, mod(ray.Origin.y, 2.0) - 1.0, mod(ray.Origin.z, 2.0) - 1.0); */
             float newDistance = SignedDistanceFromCube(cubeCenter, cubeWidth, ray.Origin);
 
             if(newDistance < distance)
@@ -101,6 +104,8 @@ void main()
         if(distance < collisionDistance)
         {
             hit = true;
+            /* vec3 repetitiveRayOrigin = vec3(fract(ray.Origin.x) - 0.5, fract(ray.Origin.y) - 0.5, fract(ray.Origin.z) - 0.5); */
+            /* vec3 repetitiveRayOrigin = vec3(mod(ray.Origin.x, 2.0) - 1.0, mod(ray.Origin.y, 2.0) - 1.0, mod(ray.Origin.z, 2.0) - 1.0); */
             hitNormal = normalize(ray.Origin - hitCubeCenter);
             vec3 absoluteNormal = abs(hitNormal);
             float maxComponent = max(max(absoluteNormal.x, absoluteNormal.y), absoluteNormal.z);
@@ -129,7 +134,7 @@ void main()
     }
     else
     {
-        imageStore(renderTarget, pixelCoord, vec4(1) * (1.0 - minDistance));
+        /* imageStore(renderTarget, pixelCoord, vec4(1) * (1.0 - minDistance)); */
     }
 }
 

@@ -11,11 +11,6 @@ static void GlfwKeyCallback(GLFWwindow* window, int key, int scancode, int actio
 
 static bool MoveUp, MoveDown, MoveLeft, MoveRight, MoveForward, MoveBackward = false;
 
-void RendererGlfwFrameBufferSizeCallback(GLFWwindow* window, int width, int height)
-{
-    glViewport(0, 0, width, height);
-}
-
 int RendererInit(Renderer* renderer)
 {
     if(glfwInit() == false)
@@ -38,7 +33,6 @@ int RendererInit(Renderer* renderer)
 
     glfwMakeContextCurrent(renderer->Window);
     
-    glfwSetFramebufferSizeCallback(renderer->Window, RendererGlfwFrameBufferSizeCallback);
     glViewport(0, 0, width, height);
 
     glewExperimental = GL_TRUE;
@@ -75,8 +69,15 @@ void Render(Renderer* renderer)
         int width, height;
 
         // TODO: Handle resizing
-
         glfwGetFramebufferSize(renderer->Window, &width, &height);
+
+        if(width != renderer->Texture.Width || height != renderer->Texture.Height)
+        {
+            glDeleteTextures(1, &renderer->Texture.Handle);
+            renderer->Texture = CreateTexture(width, height);
+            bool success = TryAttachTextureToFramebuffer(renderer->Framebuffer, &renderer->Texture);
+            LogAssert(success, "Failed to attach texture to framebuffer after resize.");
+        }
 
         glUseProgram(renderer->ShaderProgram);
 
@@ -88,6 +89,7 @@ void Render(Renderer* renderer)
         glBindImageTexture(0, renderer->Texture.Handle, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
         glDispatchCompute(width / 16, height / 16, 1);
         //make ALL barriers wait until this compute shader is done.
+        //TODO: investigate if we can wait for LESS barriers.
         glMemoryBarrier(GL_ALL_BARRIER_BITS);
 
         BlitFramebufferToSwapchain(renderer->Framebuffer, &renderer->Texture);
@@ -127,16 +129,25 @@ const GLuint CreateFramebufferWithTexture(const Texture* texture)
     GLuint result;
     glCreateFramebuffers(1, &result);
 
-    glNamedFramebufferTexture(result, GL_COLOR_ATTACHMENT0, texture->Handle, 0);
+    bool success = TryAttachTextureToFramebuffer(result, texture);
+
+    LogAssert(success, "Failed to create framebuffer.");
+
+    return result;
+}
+
+bool TryAttachTextureToFramebuffer(const GLuint framebufferHandle, const Texture* texture)
+{
+    glNamedFramebufferTexture(framebufferHandle, GL_COLOR_ATTACHMENT0, texture->Handle, 0);
 
     if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
     {
-        LogError("Failed to create framebuffer.");
-        glDeleteFramebuffers(1, &result);
-        return 0;
+        LogError("Framebuffer is not complete.");
+        glDeleteFramebuffers(1, &framebufferHandle);
+        return false;
     }
 
-    return result;
+    return true;
 }
 
 void BlitFramebufferToSwapchain(const GLuint framebuffer, const Texture* texture)
