@@ -12,6 +12,6 @@ typedef struct Camera
     float Speed;
 } Camera;
 
-void CameraProcessInput(Camera* camera, bool moveForward, bool moveBackward, bool moveLeft, bool moveRight, bool moveUp, bool moveDown);
+void CameraProcessInput(Camera* camera, float deltaTime, bool moveForward, bool moveBackward, bool moveLeft, bool moveRight, bool moveUp, bool moveDown);
 
 #endif // CAMERA_H

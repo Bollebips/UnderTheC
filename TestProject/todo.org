@@ -1,13 +1,15 @@
 #+title: Voxel raytracing engine todo
 
-* TODO Portfolio-worthy voxel raymarching [16%]
+* TODO Portfolio-worthy voxel raymarching [62%]
 - [X] support image resizing
-- [ ] better ray direction calculation
-- [ ] extract camera code out of shader
+- [X] better ray direction calculation
+- [X] extract camera code out of shader
+- [X] make worker count correct
 - [ ] windows build support
+- [X] make camera movement framerate independant
+- [ ] camera rotation
 - [ ] ambiant occlusion
   - send new ray in direction of reflection
   - check hit distance of reflected ray
     - short distance -> dark AO
     - long distance -> light AO
-- [ ] camera rotation

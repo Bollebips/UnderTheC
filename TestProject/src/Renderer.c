@@ -1,6 +1,7 @@
 #include "Renderer.h"
 
 #include <stdlib.h>
+#include <time.h>
 
 #include <Logger.h>
 #include <Utils/FileIO.h>
@@ -50,25 +51,39 @@ int RendererInit(Renderer* renderer)
 
     renderer->Framebuffer = CreateFramebufferWithTexture(&renderer->Texture);
 
+    renderer->Camera.Position = (Vec3f){0, 1, -1};
+    renderer->Camera.Forward = (Vec3f){0, 0, 1};
+    renderer->Camera.Speed = 1.0f;
+
     return EXIT_SUCCESS;
 }
 
 void Render(Renderer* renderer)
 {
-    renderer->Camera.Position = (Vec3f){0, 1, -1};
-    renderer->Camera.Forward = (Vec3f){0, 0, 1};
-    renderer->Camera.Speed = 0.01f;
+    struct timespec prevTime, currentTime;
+    clock_gettime(CLOCK_MONOTONIC, &prevTime);
+
+    GLint cameraPosAttribute = glGetUniformLocation(renderer->ShaderProgram, "cameraPos");
+    GLint cameraForwardAttribute = glGetUniformLocation(renderer->ShaderProgram, "cameraForward");
+
+    const GLuint workGroupSizeX = 16;
+    const GLuint workGroupSizeY = 16;
+
+    //Disable v-sync
+    glfwSwapInterval(0);
 
     while (!glfwWindowShouldClose(renderer->Window))
     {
-        CameraProcessInput(&renderer->Camera, MoveForward, MoveBackward, MoveLeft, MoveRight, MoveUp, MoveDown);
+        clock_gettime(CLOCK_MONOTONIC, &currentTime);
+        float deltaTime = (currentTime.tv_sec - prevTime.tv_sec) +
+                           (currentTime.tv_nsec - prevTime.tv_nsec) * 1e-9;
+        clock_gettime(CLOCK_MONOTONIC, &prevTime);
+        LogInfo("%f", 1.0f / deltaTime);
 
-        glClearColor(0, 0, 0, 1);
-        glClear(GL_COLOR_BUFFER_BIT);
+        CameraProcessInput(&renderer->Camera, deltaTime, MoveForward, MoveBackward, MoveLeft, MoveRight, MoveUp, MoveDown);
 
         int width, height;
 
-        // TODO: Handle resizing
         glfwGetFramebufferSize(renderer->Window, &width, &height);
 
         if(width != renderer->Texture.Width || height != renderer->Texture.Height)
@@ -79,17 +94,20 @@ void Render(Renderer* renderer)
             LogAssert(success, "Failed to attach texture to framebuffer after resize.");
         }
 
+        glClearColor(0, 0.5f, 0.75f, 1);
+        glClear(GL_COLOR_BUFFER_BIT);
+
         glUseProgram(renderer->ShaderProgram);
 
-        GLint cameraPosAttribute = glGetUniformLocation(renderer->ShaderProgram, "cameraPos");
         glUniform3fv(cameraPosAttribute, 1, (const GLfloat*)&renderer->Camera.Position);
-        GLint cameraForwardAttribute = glGetUniformLocation(renderer->ShaderProgram, "cameraForward");
         glUniform3fv(cameraForwardAttribute, 1, (const GLfloat*)&renderer->Camera.Forward);
 
+        GLuint numGroupsX = (width + workGroupSizeX - 1) / workGroupSizeX;
+        GLuint numGroupsY = (height + workGroupSizeY - 1) / workGroupSizeY;
+
         glBindImageTexture(0, renderer->Texture.Handle, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+        glDispatchCompute(numGroupsX, numGroupsY, 1);
         glDispatchCompute(width / 16, height / 16, 1);
-        //make ALL barriers wait until this compute shader is done.
-        //TODO: investigate if we can wait for LESS barriers.
         glMemoryBarrier(GL_ALL_BARRIER_BITS);
 
         BlitFramebufferToSwapchain(renderer->Framebuffer, &renderer->Texture);
