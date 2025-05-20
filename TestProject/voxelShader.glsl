@@ -1,10 +1,9 @@
 #version 460 core
 #extension GL_ARB_gpu_shader_int64 : require
 
-uniform vec3 cameraPos;
-uniform vec3 cameraForward;
-uniform vec3 cameraUp = vec3(0, 1, 0);
-const float vFov = 90;
+uniform mat4 cameraTransform;
+
+const float vFov = 65;
 
 const float nearPlaneDistance = 0.01;
 const float farPlaneDistance = 50.0;
@@ -44,13 +43,14 @@ void main()
     );
 
     //Camera
-    vec3 cameraRight = normalize(cross(cameraUp, cameraForward));
+    vec3 cameraRight = vec3(cameraTransform[0]);
+    vec3 cameraUp = vec3(cameraTransform[1]);
+    vec3 cameraForward = vec3(cameraTransform[2]);
+    vec3 cameraPos = vec3(cameraTransform[3]);
 
     //Viewport
-    // TODO: Move this out of the shader
     float viewportHeight = nearPlaneDistance * tan(radians(vFov * 0.5)) * 2.0;
     float viewportWidth = viewportHeight * (dimensions.x / dimensions.y);
-
     vec3 viewportU = viewportWidth * cameraRight;
     vec3 viewportV = viewportHeight * cameraUp;
 
@@ -91,7 +91,7 @@ void main()
 
             vec3 cubeCenter = vec3(0) + (cubeID * cubeWidth);
 
-            float newDistance = SignedDistanceFromCube(cubeCenter, cubeWidth, ray.Origin);
+            float newDistance = abs(SignedDistanceFromCube(cubeCenter, cubeWidth, ray.Origin));
 
             if(newDistance < distance)
             {

@@ -6,11 +6,16 @@
 #include <Logger.h>
 #include <Utils/FileIO.h>
 #include <Math/Vec3f.h>
+#include <Math/Mat4x4f.h>
 
 static GLuint CreateComputeShader(const char*);
 static void GlfwKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 
-static bool MoveUp, MoveDown, MoveLeft, MoveRight, MoveForward, MoveBackward = false;
+static bool MoveUp, MoveDown,
+            MoveLeft, MoveRight,
+            MoveForward, MoveBackward,
+            LookUp, LookDown,
+            LookLeft, LookRight = false;
 
 int RendererInit(Renderer* renderer)
 {
@@ -51,9 +56,10 @@ int RendererInit(Renderer* renderer)
 
     renderer->Framebuffer = CreateFramebufferWithTexture(&renderer->Texture);
 
-    renderer->Camera.Position = (Vec3f){0, 1, -1};
-    renderer->Camera.Forward = (Vec3f){0, 0, 1};
+    renderer->Camera.Transform = GLMS_MAT4_IDENTITY;
+    glm_translate(renderer->Camera.Transform.raw, (vec3){0, 1, -1});
     renderer->Camera.Speed = 1.0f;
+    renderer->Camera.AngularSpeed = 1.0f;
 
     return EXIT_SUCCESS;
 }
@@ -63,14 +69,13 @@ void Render(Renderer* renderer)
     struct timespec prevTime, currentTime;
     clock_gettime(CLOCK_MONOTONIC, &prevTime);
 
-    GLint cameraPosAttribute = glGetUniformLocation(renderer->ShaderProgram, "cameraPos");
-    GLint cameraForwardAttribute = glGetUniformLocation(renderer->ShaderProgram, "cameraForward");
+    GLint cameraTransformAttribute = glGetUniformLocation(renderer->ShaderProgram, "cameraTransform");
 
     const GLuint workGroupSizeX = 16;
     const GLuint workGroupSizeY = 16;
 
     //Disable v-sync
-    glfwSwapInterval(0);
+    /* glfwSwapInterval(0); */
 
     while (!glfwWindowShouldClose(renderer->Window))
     {
@@ -78,9 +83,8 @@ void Render(Renderer* renderer)
         float deltaTime = (currentTime.tv_sec - prevTime.tv_sec) +
                            (currentTime.tv_nsec - prevTime.tv_nsec) * 1e-9;
         clock_gettime(CLOCK_MONOTONIC, &prevTime);
-        LogInfo("%f", 1.0f / deltaTime);
 
-        CameraProcessInput(&renderer->Camera, deltaTime, MoveForward, MoveBackward, MoveLeft, MoveRight, MoveUp, MoveDown);
+        CameraProcessInput(&renderer->Camera, deltaTime, MoveForward, MoveBackward, MoveLeft, MoveRight, MoveUp, MoveDown, LookDown, LookUp, LookLeft, LookRight);
 
         int width, height;
 
@@ -99,8 +103,7 @@ void Render(Renderer* renderer)
 
         glUseProgram(renderer->ShaderProgram);
 
-        glUniform3fv(cameraPosAttribute, 1, (const GLfloat*)&renderer->Camera.Position);
-        glUniform3fv(cameraForwardAttribute, 1, (const GLfloat*)&renderer->Camera.Forward);
+        glUniformMatrix4fv(cameraTransformAttribute, 1, GL_FALSE, renderer->Camera.Transform.raw[0]);
 
         GLuint numGroupsX = (width + workGroupSizeX - 1) / workGroupSizeX;
         GLuint numGroupsY = (height + workGroupSizeY - 1) / workGroupSizeY;
@@ -203,11 +206,23 @@ static void GlfwKeyCallback(GLFWwindow* window, int key, int scancode, int actio
             case GLFW_KEY_D:
                 MoveRight = true;
                 break;
-            case GLFW_KEY_Q:
+            case GLFW_KEY_E:
                 MoveUp = true;
                 break;
-            case GLFW_KEY_E:
+            case GLFW_KEY_Q:
                 MoveDown = true;
+                break;
+             case GLFW_KEY_UP:
+                LookUp = true;
+                break;
+            case GLFW_KEY_DOWN:
+                LookDown = true;
+                break;
+             case GLFW_KEY_LEFT:
+                LookLeft = true;
+                break;
+            case GLFW_KEY_RIGHT:
+                LookRight = true;
                 break;
         }
     }
@@ -227,11 +242,23 @@ static void GlfwKeyCallback(GLFWwindow* window, int key, int scancode, int actio
             case GLFW_KEY_D:
                 MoveRight = false;
                 break;
-            case GLFW_KEY_Q:
+            case GLFW_KEY_E:
                 MoveUp = false;
                 break;
-            case GLFW_KEY_E:
+            case GLFW_KEY_Q:
                 MoveDown = false;
+                break;
+            case GLFW_KEY_UP:
+                LookUp = false;
+                break;
+            case GLFW_KEY_DOWN:
+                LookDown = false;
+                break;
+            case GLFW_KEY_LEFT:
+                LookLeft = false;
+                break;
+            case GLFW_KEY_RIGHT:
+                LookRight = false;
                 break;
         }
     }

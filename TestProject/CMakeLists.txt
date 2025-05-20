@@ -14,6 +14,9 @@ set(GLEW_LIB_PATH ${GLEW_INSTALL_DIR}/lib/libGLEW.so)
 set(GLFW_INSTALL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/3rdParty/glfw)
 set(GLFW_LIB_PATH ${GLFW_INSTALL_DIR}/lib/libglfw.so)
 
+set(CGLM_INSTALL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/3rdParty/cglm)
+set(CGLM_LIB_PATH ${CGLM_INSTALL_DIR}/lib/libcglm.so)
+
 # exclude unnecessary folders from glfw (samples, tests, docs, ...)
 #set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 #set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
@@ -42,6 +45,8 @@ set(GLFW_LIB_PATH ${GLFW_INSTALL_DIR}/lib/libglfw.so)
 project(TestProject)
 
 # TODO: Set C standard
+# set(C_STANDARD 11 C_STANDARD_REQUIRED ON)
+# set_target_properties(TestProject PROPERTIES C_STANDARD 99 C_STANDARD_REQUIRED ON)
 
 # we define MY_SOURCES to be a list of all the source files for my project
 #file(GLOB_RECURSE MY_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
@@ -75,6 +80,18 @@ ExternalProject_Add(
     ${CMAKE_COMMAND} -S <SOURCE_DIR> -B <BINARY_DIR> -DCMAKE_INSTALL_PREFIX=${GLFW_INSTALL_DIR} -DBUILD_SHARED_LIBS=ON
     #BUILD_ALWAYS 1 (Might want to enable this again if 3rdparty folder is removed.)
 )
+
+ExternalProject_Add(
+    cglm
+    PREFIX cglm
+    GIT_REPOSITORY https://github.com/recp/cglm.git
+    GIT_TAG        v0.9.6  # You can pin to a specific tag like 'glew-2.2.0'
+    UPDATE_COMMAND ""  # Avoid updating every time
+    CONFIGURE_COMMAND
+    ${CMAKE_COMMAND} -S <SOURCE_DIR> -B <BINARY_DIR> -DCMAKE_INSTALL_PREFIX=${CGLM_INSTALL_DIR}
+    #BUILD_ALWAYS 1 (Might want to enable this again if 3rdparty folder is removed.)
+)
+
 # Define the directories where the GLEW headers and libraries will be located
 #ExternalProject_Get_Property(glew source_dir binary_dir)
 
@@ -101,15 +118,21 @@ set_target_properties(glew_shared PROPERTIES
 
 add_library(glfw_shared SHARED IMPORTED GLOBAL)
 set_target_properties(glfw_shared PROPERTIES
-	IMPORTED_LOCATION ${GLFW_LIB_PATH}
-	INTERFACE_INCLUDE_DIRECTORIES ${GLFW_INSTALL_DIR}/include
+    IMPORTED_LOCATION ${GLFW_LIB_PATH}
+    INTERFACE_INCLUDE_DIRECTORIES ${GLFW_INSTALL_DIR}/include
+)
+
+add_library(cglm_shared SHARED IMPORTED GLOBAL)
+set_target_properties(cglm_shared PROPERTIES
+    IMPORTED_LOCATION ${CGLM_LIB_PATH}
+    INTERFACE_INCLUDE_DIRECTORIES ${CGLM_INSTALL_DIR}/include
 )
 
 add_dependencies(glew_shared glew)
 add_dependencies(glfw_shared glfw)
+add_dependencies(cglm_shared cglm)
 
 find_package(OpenGL REQUIRED)
-
 
 file(GLOB_RECURSE SOURCE_FILES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c")
 add_Executable(TestProject ${SOURCE_FILES})
@@ -122,4 +145,4 @@ target_compile_definitions(UTCe PUBLIC DEBUG)
 target_include_directories(TestProject PUBLIC ${UTCE_INSTALL_DIR}/src)
 target_include_directories(TestProject PUBLIC ${GLEW_INSTALL_DIR}/include)
 target_include_directories(TestProject PUBLIC ${GLFW_INSTALL_DIR}/include)
-target_link_libraries(TestProject PUBLIC UTCe m glew_shared glfw_shared OpenGL::GL)
+target_link_libraries(TestProject PUBLIC UTCe m glew_shared glfw_shared cglm_shared  OpenGL::GL)
