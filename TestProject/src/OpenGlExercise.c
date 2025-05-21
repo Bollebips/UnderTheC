@@ -62,7 +62,7 @@ int Exercise()
 
     glewExperimental = GL_TRUE;
     GLenum glewInitResult = glewInit();
-    LogAssert(glewInitResult != GLEW_OK, "Glew did not initialize correctly.");
+    LogAssert(glewInitResult == GLEW_OK, "Glew did not initialize correctly: %s\n", glewGetErrorString(glewInitResult));
 
     const char* vertexShaderSource = GetStringFromFile("../vertexShader.glsl");
     const char* fragmentShaderSource = GetStringFromFile("../fragmentShader.glsl");

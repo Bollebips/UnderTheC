@@ -5,8 +5,14 @@ cmake_minimum_required(VERSION 3.16)
 #    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 #endif()
 
-set(UTCE_INSTALL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../Engine)
-set(UTCE_LIB_PATH ${UTCE_INSTALL_DIR}/build/libUTCe.so)
+set(UTCE_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../Engine)
+set(UTCE_INSTALL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/3rdParty/UTC_Engine)
+if(WIN32)
+    set(UTCE_LIB_PATH ${UTCE_INSTALL_DIR}/build/Debug/UTCe.dll)
+    set(UTCE_STATIC_LIB_PATH ${UTCE_INSTALL_DIR}/build/Debug/UTCe.lib)
+else()
+    set(UTCE_LIB_PATH ${UTCE_INSTALL_DIR}/build/libUTCe.so)
+endif()
 
 set(GLEW_INSTALL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/3rdParty/glew)
 if(WIN32)
@@ -18,7 +24,8 @@ endif()
 
 set(GLFW_INSTALL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/3rdParty/glfw)
 if(WIN32)
-    set(GLFW_DYNAMIC_LIB_PATH ${GLFW_INSTALL_DIR}/lib/libglfw.dll)
+    #set(GLFW_DYNAMIC_LIB_PATH ${GLFW_INSTALL_DIR}/lib/libglfw.dll)
+    set(GLFW_DYNAMIC_LIB_PATH ${GLFW_INSTALL_DIR}/bin/glfw3.dll)
     set(GLFW_STATIC_LIB_PATH ${GLFW_INSTALL_DIR}/lib/glfw3dll.lib)
 else()
     set(GLFW_DYNAMIC_LIB_PATH ${GLFW_INSTALL_DIR}/lib/libglfw.so)
@@ -77,7 +84,9 @@ if(WIN32)
         INSTALL_COMMAND
             ${CMAKE_COMMAND} -E copy_directory <SOURCE_DIR>/include ${GLEW_INSTALL_DIR}/include &&
             ${CMAKE_COMMAND} -E copy_if_different <SOURCE_DIR>/lib/Release/x64/glew32.lib ${GLEW_INSTALL_DIR}/lib/ &&
-            ${CMAKE_COMMAND} -E copy_if_different <SOURCE_DIR>/bin/Release/x64/glew32.dll ${GLEW_INSTALL_DIR}/bin/
+            ${CMAKE_COMMAND} -E copy_if_different <SOURCE_DIR>/bin/Release/x64/glew32.dll ${GLEW_INSTALL_DIR}/bin/ &&
+            #TODO: the command below doesn't re-run if I delete the dll file.
+            ${CMAKE_COMMAND} -E copy_if_different ${GLEW_DYNAMIC_LIB_PATH} ${CMAKE_BINARY_DIR}/Debug/
     )
 else()
     ExternalProject_Add(
@@ -101,6 +110,9 @@ ExternalProject_Add(
     UPDATE_COMMAND ""  # Avoid updating every time
     CONFIGURE_COMMAND 
     ${CMAKE_COMMAND} -S <SOURCE_DIR> -B <BINARY_DIR> -DCMAKE_INSTALL_PREFIX=${GLFW_INSTALL_DIR} -DBUILD_SHARED_LIBS=ON
+    INSTALL_COMMAND
+            #TODO: the command below doesn't re-run if I delete the dll file.
+        ${CMAKE_COMMAND} -E copy_if_different ${GLFW_DYNAMIC_LIB_PATH} ${CMAKE_BINARY_DIR}/Debug/
     #BUILD_ALWAYS 1 (Might want to enable this again if 3rdparty folder is removed.)
 )
 # Define the directories where the GLEW headers and libraries will be located
@@ -153,17 +165,27 @@ endif()
 add_dependencies(glew_shared glew)
 add_dependencies(glfw_shared glfw)
 
+#add_subdirectory(${UTCE_SOURCE_DIR} ${UTCE_INSTALL_DIR})
+add_subdirectory(${UTCE_SOURCE_DIR} ${CMAKE_BINARY_DIR}/UTC_Engine)
+
 find_package(OpenGL REQUIRED)
 
 file(GLOB_RECURSE SOURCE_FILES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c")
 add_Executable(TestProject ${SOURCE_FILES})
 
-add_subdirectory(${UTCE_INSTALL_DIR} UTC_Engine)
 #set(CMAKE_BUILD_TYPE DEBUG)
 target_compile_definitions(UTCe PUBLIC DEBUG)
+add_dependencies(TestProject UTCe)
+
+set_target_properties( TestProject PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build)
+set_target_properties( glew_shared PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build)
+set_target_properties( glfw_shared PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build)
+set_target_properties( UTCe PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build)
+
 
 # TODO: Change this so we use an include folder instead of src
-target_include_directories(TestProject PUBLIC ${UTCE_INSTALL_DIR}/src)
+#target_include_directories(TestProject PUBLIC ${UTCE_INSTALL_DIR}/Debug)
 target_include_directories(TestProject PUBLIC ${GLEW_INSTALL_DIR}/include)
 target_include_directories(TestProject PUBLIC ${GLFW_INSTALL_DIR}/include)
-target_link_libraries(TestProject PUBLIC UTCe m glew_shared glfw_shared OpenGL::GL)
+#target_link_libraries(TestProject PUBLIC UTCe m glew_shared glfw_shared OpenGL::GL)
+target_link_libraries(TestProject PUBLIC UTCe glew_shared glfw_shared OpenGL::GL)

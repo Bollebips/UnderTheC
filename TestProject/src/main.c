@@ -4,7 +4,6 @@
 #include <math.h>
 
 #include <Logger.h>
-#include <Utils/FileIO.h>
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -14,7 +13,7 @@
 
 int main()
 {
-    /* return Exercise(); */
+    return Exercise();
 
     Renderer renderer;
 

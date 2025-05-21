@@ -1,4 +1,5 @@
-﻿#ifndef DEFINES_H
+﻿
+#ifndef DEFINES_H
 #define DEFINES_H
 
 // Unsigned int types.
@@ -6,6 +7,7 @@ typedef unsigned char u8;
 typedef unsigned short u16;
 typedef unsigned int u32;
 typedef unsigned long long u64;
+typedef unsigned int uint;
 
 // Signed int types.
 typedef signed char i8;
