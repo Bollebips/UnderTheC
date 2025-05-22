@@ -1,4 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
+include(ExternalProject)
+include(FetchContent)
 
 # TODO: Maybe support cross-compiling? (compiling to an exe for windows from linux, using mingw-w64)
 #if (MSVC)
@@ -7,17 +9,17 @@ cmake_minimum_required(VERSION 3.16)
 
 set(UTCE_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../Engine)
 set(UTCE_INSTALL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/3rdParty/UTC_Engine)
-if(WIN32)
-    set(UTCE_LIB_PATH ${UTCE_INSTALL_DIR}/build/Debug/UTCe.dll)
-    set(UTCE_STATIC_LIB_PATH ${UTCE_INSTALL_DIR}/build/Debug/UTCe.lib)
-else()
-    set(UTCE_LIB_PATH ${UTCE_INSTALL_DIR}/build/libUTCe.so)
-endif()
+#if(WIN32)
+#    set(UTCE_LIB_PATH ${UTCE_INSTALL_DIR}/build/Debug/UTCe.dll)
+#    set(UTCE_STATIC_LIB_PATH ${UTCE_INSTALL_DIR}/build/Debug/UTCe.lib)
+#else()
+#    set(UTCE_LIB_PATH ${UTCE_INSTALL_DIR}/build/libUTCe.so)
+#endif()
 
 set(GLEW_INSTALL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/3rdParty/glew)
 if(WIN32)
-    set(GLEW_DYNAMIC_LIB_PATH ${GLEW_INSTALL_DIR}/bin/glew32.dll)
-    set(GLEW_STATIC_LIB_PATH ${GLEW_INSTALL_DIR}/lib/glew32.lib)
+    set(GLEW_DYNAMIC_LIB_PATH ${GLEW_INSTALL_DIR}/bin/Release/x64/glew32.dll)
+    set(GLEW_STATIC_LIB_PATH ${GLEW_INSTALL_DIR}/lib/Release/x64/glew32.lib)
 else()
     set(GLEW_DYNAMIC_LIB_PATH ${GLEW_INSTALL_DIR}/lib/libGLEW.so)
 endif()
@@ -64,13 +66,19 @@ project(TestProject)
 #file(GLOB_RECURSE MY_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
 
 
-include(ExternalProject)
 #find_package(GLEW REQUIRED)
 #include_directories(${GLEW_INCLUDE_DIRS})
 #link_libraries(${GLEW_LIBRARIES})
 
 #TODO: Only do this on linux
 if(WIN32)
+    # FetchContent_Declare(
+    #     glewd
+    #     DOWNLOAD_EXTRACT_TIMESTAMP OFF
+    #     URL https://github.com/nigels-com/glew/releases/download/glew-2.2.0/glew-2.2.0-win32.zip
+    # )
+    # FetchContent_GetProperties(glewd)
+    # add_subdirectory(${glewd_SOURCE_DIR} ${glewd_BINARY_DIR})
     ExternalProject_Add(
         glew
         PREFIX glew
@@ -78,15 +86,16 @@ if(WIN32)
         DOWNLOAD_NAME glew-2.2.0-win32.zip
         DOWNLOAD_DIR ${CMAKE_BINARY_DIR}/glew
         DOWNLOAD_EXTRACT_TIMESTAMP OFF
-        SOURCE_DIR ${CMAKE_BINARY_DIR}/../3rdParty/glew
+        SOURCE_DIR ${GLEW_INSTALL_DIR}
         CONFIGURE_COMMAND ""
         BUILD_COMMAND ""
-        INSTALL_COMMAND
-            ${CMAKE_COMMAND} -E copy_directory <SOURCE_DIR>/include ${GLEW_INSTALL_DIR}/include &&
-            ${CMAKE_COMMAND} -E copy_if_different <SOURCE_DIR>/lib/Release/x64/glew32.lib ${GLEW_INSTALL_DIR}/lib/ &&
-            ${CMAKE_COMMAND} -E copy_if_different <SOURCE_DIR>/bin/Release/x64/glew32.dll ${GLEW_INSTALL_DIR}/bin/ &&
+        INSTALL_COMMAND ""
+        # INSTALL_COMMAND
+            # ${CMAKE_COMMAND} -E copy_directory <SOURCE_DIR>/include ${GLEW_INSTALL_DIR}/include
+            # ${CMAKE_COMMAND} -E copy_if_different <SOURCE_DIR>/lib/Release/x64/glew32.lib ${GLEW_INSTALL_DIR}/lib/ &&
+            # ${CMAKE_COMMAND} -E copy_if_different <SOURCE_DIR>/bin/Release/x64/glew32.dll ${GLEW_INSTALL_DIR}/bin/
             #TODO: the command below doesn't re-run if I delete the dll file.
-            ${CMAKE_COMMAND} -E copy_if_different ${GLEW_DYNAMIC_LIB_PATH} ${CMAKE_BINARY_DIR}/Debug/
+            # ${CMAKE_COMMAND} -E copy_if_different ${GLEW_DYNAMIC_LIB_PATH} ${CMAKE_BINARY_DIR}/Debug/
     )
 else()
     ExternalProject_Add(
@@ -102,6 +111,8 @@ else()
     )
 endif()
 
+# if(WIN32)
+# else()
 ExternalProject_Add(
     glfw
     PREFIX glfw
@@ -115,7 +126,9 @@ ExternalProject_Add(
         ${CMAKE_COMMAND} -E copy_if_different ${GLFW_DYNAMIC_LIB_PATH} ${CMAKE_BINARY_DIR}/Debug/
     #BUILD_ALWAYS 1 (Might want to enable this again if 3rdparty folder is removed.)
 )
-# Define the directories where the GLEW headers and libraries will be located
+# endif()
+
+#Define the directories where the GLEW headers and libraries will be located
 #ExternalProject_Get_Property(glew source_dir binary_dir)
 
 # Specify where to copy the GLEW headers and libraries
@@ -165,13 +178,23 @@ endif()
 add_dependencies(glew_shared glew)
 add_dependencies(glfw_shared glfw)
 
-#add_subdirectory(${UTCE_SOURCE_DIR} ${UTCE_INSTALL_DIR})
-add_subdirectory(${UTCE_SOURCE_DIR} ${CMAKE_BINARY_DIR}/UTC_Engine)
+add_subdirectory(${UTCE_SOURCE_DIR} ${UTCE_INSTALL_DIR})
 
 find_package(OpenGL REQUIRED)
 
 file(GLOB_RECURSE SOURCE_FILES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c")
 add_Executable(TestProject ${SOURCE_FILES})
+
+# FetchContent_MakeAvailable(glew)
+
+if(WIN32)
+add_custom_command(
+    TARGET TestProject POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${GLEW_DYNAMIC_LIB_PATH}"
+        "$<TARGET_FILE_DIR:TestProject>"
+)
+endif()
 
 #set(CMAKE_BUILD_TYPE DEBUG)
 target_compile_definitions(UTCe PUBLIC DEBUG)
@@ -183,8 +206,7 @@ set_target_properties( glfw_shared PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_S
 set_target_properties( UTCe PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build)
 
 
-# TODO: Change this so we use an include folder instead of src
-#target_include_directories(TestProject PUBLIC ${UTCE_INSTALL_DIR}/Debug)
+# TODO: Change this so we use an include folder of UTC engine as well.
 target_include_directories(TestProject PUBLIC ${GLEW_INSTALL_DIR}/include)
 target_include_directories(TestProject PUBLIC ${GLFW_INSTALL_DIR}/include)
 #target_link_libraries(TestProject PUBLIC UTCe m glew_shared glfw_shared OpenGL::GL)
