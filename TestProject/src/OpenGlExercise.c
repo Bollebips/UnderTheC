@@ -10,17 +10,17 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-void GlfwErrorCallback(int error, const char* message)
+static void GlfwErrorCallback(int error, const char* message)
 {
     LogError("GLFW error: %s", message);
 }
 
-void GlfwWindowCloseCallback(GLFWwindow* window)
+static void GlfwWindowCloseCallback(GLFWwindow* window)
 {
     //Do whatever when closing the window
 }
 
-void GlfwKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
+static void GlfwKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
     if(key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
     {
@@ -28,7 +28,7 @@ void GlfwKeyCallback(GLFWwindow* window, int key, int scancode, int action, int 
     }
 }
 
-void GlfwFrameBufferSizeCallback(GLFWwindow* window, int width, int height)
+static void GlfwFrameBufferSizeCallback(GLFWwindow* window, int width, int height)
 {
     glViewport(0, 0, width, height);
 }

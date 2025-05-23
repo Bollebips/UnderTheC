@@ -3,6 +3,6 @@
 
 #include "Defines.h"
 
-UTCeAPI char* GetStringFromFile(const char* filePath);
+UTCeAPI const char* GetStringFromFile(const char* filePath);
 
 #endif // FILE_IO_H
