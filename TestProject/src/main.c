@@ -5,9 +5,6 @@
 
 #include <Logger.h>
 
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
-
 #include "OpenGlExercise.h"
 #include "Renderer.h"
 
