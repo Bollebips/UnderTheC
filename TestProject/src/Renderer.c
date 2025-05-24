@@ -60,8 +60,8 @@ int RendererInit(Renderer* renderer)
 
 void Render(Renderer* renderer)
 {
-    struct timespec prevTime, currentTime;
-    clock_gettime(CLOCK_MONOTONIC, &prevTime);
+    /* struct timespec prevTime, currentTime; */
+    /* clock_gettime(CLOCK_MONOTONIC, &prevTime); */
 
     GLint cameraPosAttribute = glGetUniformLocation(renderer->ShaderProgram, "cameraPos");
     GLint cameraForwardAttribute = glGetUniformLocation(renderer->ShaderProgram, "cameraForward");
@@ -74,11 +74,12 @@ void Render(Renderer* renderer)
 
     while (!glfwWindowShouldClose(renderer->Window))
     {
-        clock_gettime(CLOCK_MONOTONIC, &currentTime);
-        float deltaTime = (currentTime.tv_sec - prevTime.tv_sec) +
-                           (currentTime.tv_nsec - prevTime.tv_nsec) * 1e-9;
-        clock_gettime(CLOCK_MONOTONIC, &prevTime);
-        LogInfo("%f", 1.0f / deltaTime);
+        /* clock_gettime(CLOCK_MONOTONIC, &currentTime); */
+        /* float deltaTime = (currentTime.tv_sec - prevTime.tv_sec) + */
+        /*                    (currentTime.tv_nsec - prevTime.tv_nsec) * 1e-9; */
+        /* clock_gettime(CLOCK_MONOTONIC, &prevTime); */
+        /* LogInfo("%f", 1.0f / deltaTime); */
+        float deltaTime = 1.0f / 60.0f;
 
         CameraProcessInput(&renderer->Camera, deltaTime, MoveForward, MoveBackward, MoveLeft, MoveRight, MoveUp, MoveDown);
 
@@ -140,6 +141,8 @@ static GLuint CreateComputeShader(const char* shaderFilePath)
         glGetShaderInfoLog(voxelShader, 512, NULL, statusLog);
         LogError("ComputeShader compilation failed: %s", statusLog);
     }
+
+    return voxelShader;
 }
 
 const GLuint CreateFramebufferWithTexture(const Texture* texture)

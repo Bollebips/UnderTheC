@@ -20,7 +20,7 @@ typedef struct Renderer
 int RendererInit(Renderer* renderer);
 void Render(Renderer* renderer);
 void RendererCleanup(Renderer* renderer);
-GLuint CreateFramebufferWithTexture(const Texture* texture);
+const GLuint CreateFramebufferWithTexture(const Texture* texture);
 void BlitFramebufferToSwapchain(const GLuint framebuffer, const Texture* texture);
 
 static bool TryAttachTextureToFramebuffer(const GLuint framebufferHandle, const Texture* texture);

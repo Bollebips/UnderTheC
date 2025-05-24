@@ -32,9 +32,6 @@ FetchContent_Declare(
     glfw
     GIT_REPOSITORY https://github.com/glfw/glfw.git
     GIT_TAG        3.4
-    # DOWNLOAD_DIR ${CMAKE_BINARY_DIR}/glfw
-    # DOWNLOAD_EXTRACT_TIMESTAMP OFF
-    # SOURCE_DIR ${GLFW_INSTALL_DIR}
 )
 
 FetchContent_Declare(
@@ -60,12 +57,14 @@ add_Executable(TestProject ${SOURCE_FILES})
 target_compile_definitions(UTCe PUBLIC DEBUG)
 add_dependencies(TestProject UTCe)
 
-set_target_properties(glfw PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-set_target_properties(glfw PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-set_target_properties(glad PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-set_target_properties(glad PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-set_target_properties(UTCe PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-set_target_properties(UTCe PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set_target_properties(TestProject PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/$<CONFIG>)
+
+set_target_properties(glfw PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/$<CONFIG>)
+set_target_properties(glfw PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/$<CONFIG>)
+set_target_properties(glad PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/$<CONFIG>)
+set_target_properties(glad PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/$<CONFIG>)
+set_target_properties(UTCe PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/$<CONFIG>)
+set_target_properties(UTCe PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/$<CONFIG>)
 
 
 # TODO: Change this so we use an include folder of UTC engine as well.
@@ -74,8 +73,7 @@ set_target_properties(UTCe PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DI
 
 if(NOT WIN32)
     target_link_libraries(TestProject m)
+    # set_target_properties(TestProject PROPERTIES LINK_FLAGS "-Wl,-rpath,$ORIGIN/lib")
 endif()
-
-set_target_properties(TestProject PROPERTIES LINK_FLAGS "-Wl,-rpath,$ORIGIN/lib")
 
 target_link_libraries(TestProject UTCe glfw glad OpenGL::GL)
