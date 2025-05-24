@@ -10,7 +10,7 @@
 
 int main()
 {
-    return Exercise();
+    /* return Exercise(); */
 
     Renderer renderer;
 

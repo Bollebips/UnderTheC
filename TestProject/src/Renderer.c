@@ -30,10 +30,13 @@ int RendererInit(Renderer* renderer)
     renderer->Window = glfwCreateWindow(width, height, "Voxel renderer", NULL, NULL);
     LogAssert(renderer->Window != NULL, "GLFW window creation failed.");
 
+    glfwMakeContextCurrent(renderer->Window);
+
+    int version = gladLoadGL(glfwGetProcAddress);
+    LogInfo("GL %d.%d\n", GLAD_VERSION_MAJOR(version), GLAD_VERSION_MINOR(version));
+
     glfwSetKeyCallback(renderer->Window, GlfwKeyCallback);
 
-    glfwMakeContextCurrent(renderer->Window);
-    
     glViewport(0, 0, width, height);
 
     /* glewExperimental = GL_TRUE; */
