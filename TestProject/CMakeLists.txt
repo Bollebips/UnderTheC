@@ -41,11 +41,24 @@ FetchContent_Declare(
     SOURCE_SUBDIR cmake
 )
 
-FetchContent_MakeAvailable(glfw glad)
+FetchContent_Declare(
+    cglm
+    GIT_REPOSITORY https://github.com/recp/cglm.git
+    GIT_TAG        v0.9.6
+)
+
+FetchContent_MakeAvailable(glfw glad cglm)
 
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
 execute_process(COMMAND ${Python3_EXECUTABLE} -m pip install --user --break-system-packages -r ${glad_SOURCE_DIR}/requirements.txt)
 glad_add_library(glad SHARED REPRODUCIBLE LOADER API gl:core=4.6)
+
+if(MSVC)
+target_compile_options(cglm PRIVATE
+  "$<$<CONFIG:Release>:/Ox>"
+  "$<$<CONFIG:Debug>:/Od>"
+)
+endif()
 
 # TODO: Add project version number
 
@@ -63,6 +76,8 @@ set_target_properties(glfw PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DI
 set_target_properties(glfw PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/$<CONFIG>)
 set_target_properties(glad PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/$<CONFIG>)
 set_target_properties(glad PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/$<CONFIG>)
+set_target_properties(cglm PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/$<CONFIG>)
+set_target_properties(cglm PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/$<CONFIG>)
 set_target_properties(UTCe PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/$<CONFIG>)
 set_target_properties(UTCe PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/$<CONFIG>)
 
@@ -76,4 +91,4 @@ if(NOT WIN32)
     # set_target_properties(TestProject PROPERTIES LINK_FLAGS "-Wl,-rpath,$ORIGIN/lib")
 endif()
 
-target_link_libraries(TestProject UTCe glfw glad OpenGL::GL)
+target_link_libraries(TestProject UTCe glfw glad cglm OpenGL::GL)

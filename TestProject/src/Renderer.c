@@ -5,8 +5,6 @@
 
 #include <Logger.h>
 #include <Utils/FileIO.h>
-#include <Math/Vec3f.h>
-#include <Math/Mat4x4f.h>
 
 static GLuint CreateComputeShader(const char*);
 static void GlfwKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
@@ -48,7 +46,7 @@ int RendererInit(Renderer* renderer)
     /* GLenum glewInitResult = glewInit(); */
     /* LogAssert(glewInitResult != GLEW_OK, "Glew did not initialize correctly."); */
 
-    GLuint computeShaderHandle = CreateComputeShader("../voxelShader.glsl");
+    GLuint computeShaderHandle = CreateComputeShader("voxelShader.glsl");
 
     GLuint shaderProgram = glCreateProgram();
     glAttachShader(shaderProgram, computeShaderHandle);
@@ -82,10 +80,11 @@ void Render(Renderer* renderer)
 
     while (!glfwWindowShouldClose(renderer->Window))
     {
-        clock_gettime(CLOCK_MONOTONIC, &currentTime);
-        float deltaTime = (currentTime.tv_sec - prevTime.tv_sec) +
-                           (currentTime.tv_nsec - prevTime.tv_nsec) * 1e-9;
-        clock_gettime(CLOCK_MONOTONIC, &prevTime);
+        /* clock_gettime(CLOCK_MONOTONIC, &currentTime); */
+        /* float deltaTime = (currentTime.tv_sec - prevTime.tv_sec) + */
+        /*                    (currentTime.tv_nsec - prevTime.tv_nsec) * 1e-9; */
+        /* clock_gettime(CLOCK_MONOTONIC, &prevTime); */
+        float deltaTime = 1.0f / 60.0f;
 
         CameraProcessInput(&renderer->Camera, deltaTime, MoveForward, MoveBackward, MoveLeft, MoveRight, MoveUp, MoveDown, LookDown, LookUp, LookLeft, LookRight);
 
