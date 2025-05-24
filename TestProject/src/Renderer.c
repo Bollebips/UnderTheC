@@ -36,9 +36,9 @@ int RendererInit(Renderer* renderer)
     
     glViewport(0, 0, width, height);
 
-    glewExperimental = GL_TRUE;
-    GLenum glewInitResult = glewInit();
-    LogAssert(glewInitResult != GLEW_OK, "Glew did not initialize correctly.");
+    /* glewExperimental = GL_TRUE; */
+    /* GLenum glewInitResult = glewInit(); */
+    /* LogAssert(glewInitResult != GLEW_OK, "Glew did not initialize correctly."); */
 
     GLuint computeShaderHandle = CreateComputeShader("../voxelShader.glsl");
 

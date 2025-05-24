@@ -7,7 +7,7 @@
 #include <Logger.h>
 #include <Utils/FileIO.h>
 
-#include <GL/glew.h>
+#include <glad/gl.h>
 #include <GLFW/glfw3.h>
 
 static void GlfwErrorCallback(int error, const char* message)
@@ -54,15 +54,14 @@ int Exercise()
 
     glfwMakeContextCurrent(window);
 
+    int version = gladLoadGL(glfwGetProcAddress);
+    LogInfo("GL %d.%d\n", GLAD_VERSION_MAJOR(version), GLAD_VERSION_MINOR(version));
+
     glfwSetWindowCloseCallback(window, GlfwWindowCloseCallback);
     glfwSetFramebufferSizeCallback(window, GlfwFrameBufferSizeCallback);
     glViewport(0, 0, width, height);
 
     glfwSetKeyCallback(window, GlfwKeyCallback);
-
-    glewExperimental = GL_TRUE;
-    GLenum glewInitResult = glewInit();
-    LogAssert(glewInitResult == GLEW_OK, "Glew did not initialize correctly: %s\n", glewGetErrorString(glewInitResult));
 
     const char* vertexShaderSource = GetStringFromFile("vertexShader.glsl");
     const char* fragmentShaderSource = GetStringFromFile("fragmentShader.glsl");
