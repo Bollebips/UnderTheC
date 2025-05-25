@@ -9,57 +9,12 @@ include(FetchContent)
 
 set(UTCE_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../Engine)
 set(UTCE_INSTALL_DIR ${CMAKE_CURRENT_BINARY_DIR}/_deps/utce-build)
-#if(WIN32)
-#    set(UTCE_LIB_PATH ${UTCE_INSTALL_DIR}/build/Debug/UTCe.dll)
-#    set(UTCE_STATIC_LIB_PATH ${UTCE_INSTALL_DIR}/build/Debug/UTCe.lib)
-#else()
-#    set(UTCE_LIB_PATH ${UTCE_INSTALL_DIR}/build/libUTCe.so)
-#endif()
 
 project(TestProject)
 
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED True)
-
-find_package(OpenGL REQUIRED)
-
-set(GLFW_LIBRARY_TYPE SHARED CACHE BOOL "Build shared libs" FORCE)
-set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
-
-FetchContent_Declare(
-    glfw
-    GIT_REPOSITORY https://github.com/glfw/glfw.git
-    GIT_TAG        3.4
-)
-
-FetchContent_Declare(
-    glad
-    GIT_REPOSITORY https://github.com/Dav1dde/glad.git
-    GIT_TAG v2.0.8
-    SOURCE_SUBDIR cmake
-)
-
-FetchContent_Declare(
-    cglm
-    GIT_REPOSITORY https://github.com/recp/cglm.git
-    GIT_TAG        v0.9.6
-)
-
-FetchContent_MakeAvailable(glfw glad cglm)
-
-find_package(Python3 REQUIRED COMPONENTS Interpreter)
-execute_process(COMMAND ${Python3_EXECUTABLE} -m pip install --user --break-system-packages -r ${glad_SOURCE_DIR}/requirements.txt)
-glad_add_library(glad SHARED REPRODUCIBLE LOADER API gl:core=4.6)
-
-if(MSVC)
-target_compile_options(cglm PRIVATE
-  "$<$<CONFIG:Release>:/Ox>"
-  "$<$<CONFIG:Debug>:/Od>"
-)
-endif()
-
+#
 # TODO: Add project version number
 
 add_subdirectory(${UTCE_SOURCE_DIR} ${UTCE_INSTALL_DIR})
@@ -72,15 +27,6 @@ add_dependencies(TestProject UTCe)
 
 set_target_properties(TestProject PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/$<CONFIG>)
 
-set_target_properties(glfw PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/$<CONFIG>)
-set_target_properties(glfw PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/$<CONFIG>)
-set_target_properties(glad PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/$<CONFIG>)
-set_target_properties(glad PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/$<CONFIG>)
-set_target_properties(cglm PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/$<CONFIG>)
-set_target_properties(cglm PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/$<CONFIG>)
-set_target_properties(UTCe PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/$<CONFIG>)
-set_target_properties(UTCe PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/$<CONFIG>)
-
 add_custom_command(
   TARGET TestProject
   POST_BUILD
@@ -89,13 +35,4 @@ add_custom_command(
     ${CMAKE_BINARY_DIR}/resources
 )
 
-# TODO: Change this so we use an include folder of UTC engine as well.
-# target_include_directories(TestProject PUBLIC ${glfw_SOURCE_DIR}/include)
-# target_include_directories(TestProject PUBLIC ${glad_SOURCE_DIR}/include)
-
-if(NOT WIN32)
-    target_link_libraries(TestProject m)
-    set_target_properties(TestProject PROPERTIES LINK_FLAGS "-Wl,-rpath,$ORIGIN/lib")
-endif()
-
-target_link_libraries(TestProject UTCe glfw glad cglm OpenGL::GL)
+target_link_libraries(TestProject UTCe)
