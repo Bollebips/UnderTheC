@@ -36,7 +36,9 @@ int RendererInit(Renderer* renderer)
     glfwMakeContextCurrent(renderer->Window);
 
     int version = gladLoadGL(glfwGetProcAddress);
-    LogInfo("GL %d.%d\n", GLAD_VERSION_MAJOR(version), GLAD_VERSION_MINOR(version));
+    LogInfo("GL %d.%d", GLAD_VERSION_MAJOR(version), GLAD_VERSION_MINOR(version));
+
+    LogInfo("Graphics device: %s", glGetString(GL_RENDERER));
 
     glfwSetKeyCallback(renderer->Window, GlfwKeyCallback);
 
