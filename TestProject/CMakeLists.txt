@@ -81,6 +81,13 @@ set_target_properties(cglm PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DI
 set_target_properties(UTCe PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/$<CONFIG>)
 set_target_properties(UTCe PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/$<CONFIG>)
 
+add_custom_command(
+  TARGET TestProject
+  POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_SOURCE_DIR}/resources
+    ${CMAKE_BINARY_DIR}/resources
+)
 
 # TODO: Change this so we use an include folder of UTC engine as well.
 # target_include_directories(TestProject PUBLIC ${glfw_SOURCE_DIR}/include)
@@ -88,7 +95,7 @@ set_target_properties(UTCe PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DI
 
 if(NOT WIN32)
     target_link_libraries(TestProject m)
-    # set_target_properties(TestProject PROPERTIES LINK_FLAGS "-Wl,-rpath,$ORIGIN/lib")
+    set_target_properties(TestProject PROPERTIES LINK_FLAGS "-Wl,-rpath,$ORIGIN/lib")
 endif()
 
 target_link_libraries(TestProject UTCe glfw glad cglm OpenGL::GL)

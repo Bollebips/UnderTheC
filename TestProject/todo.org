@@ -1,6 +1,6 @@
 #+title: Voxel raytracing engine todo
 
-* TODO Portfolio-worthy voxel raymarching [54%]
+* TODO Portfolio-worthy voxel raymarching [66%]
 - [X] support image resizing
 - [X] better ray direction calculation
 - [X] extract camera code out of shader
@@ -9,8 +9,9 @@
 - [X] make camera movement framerate independant
 - [X] camera rotation
 - [ ] fix crash when window becomes 0 pixels
-- [ ] check memory leaks
+- [X] check memory leaks
 - [ ] restructure engine/app hierarchy
+- [X] shaders in resource folder
 - [ ] ambiant occlusion
   - send new ray in direction of reflection
   - check hit distance of reflected ray

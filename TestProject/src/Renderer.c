@@ -48,7 +48,7 @@ int RendererInit(Renderer* renderer)
     /* GLenum glewInitResult = glewInit(); */
     /* LogAssert(glewInitResult != GLEW_OK, "Glew did not initialize correctly."); */
 
-    GLuint computeShaderHandle = CreateComputeShader("voxelShader.glsl");
+    GLuint computeShaderHandle = CreateComputeShader("resources/voxelShader.glsl");
 
     GLuint shaderProgram = glCreateProgram();
     glAttachShader(shaderProgram, computeShaderHandle);
