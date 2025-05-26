@@ -8,7 +8,7 @@ const float vFov = 65;
 const float nearPlaneDistance = 0.01;
 const float farPlaneDistance = 50.0;
 
-const float collisionDistance = 0.001;
+const float collisionDistance = 0.0001;
 const int maxSteps = 32;
 
 const int voxelBrickSize = 4;

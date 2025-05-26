@@ -69,8 +69,8 @@ int RendererInit(Renderer* renderer)
 
 void Render(Renderer* renderer)
 {
-    /* struct timespec prevTime, currentTime; */
-    /* clock_gettime(CLOCK_MONOTONIC, &prevTime); */
+    struct timespec prevTime, currentTime;
+    timespec_get(&prevTime, TIME_UTC);
 
     GLint cameraTransformAttribute = glGetUniformLocation(renderer->ShaderProgram, "cameraTransform");
 
@@ -82,11 +82,10 @@ void Render(Renderer* renderer)
 
     while (!glfwWindowShouldClose(renderer->Window))
     {
-        /* clock_gettime(CLOCK_MONOTONIC, &currentTime); */
-        /* float deltaTime = (currentTime.tv_sec - prevTime.tv_sec) + */
-        /*                    (currentTime.tv_nsec - prevTime.tv_nsec) * 1e-9; */
-        /* clock_gettime(CLOCK_MONOTONIC, &prevTime); */
-        float deltaTime = 1.0f / 60.0f;
+        timespec_get(&currentTime, TIME_UTC);
+        float deltaTime = (currentTime.tv_sec - prevTime.tv_sec) +
+                           (currentTime.tv_nsec - prevTime.tv_nsec) * 1e-9;
+        timespec_get(&prevTime, TIME_UTC);
 
         CameraProcessInput(&renderer->Camera, deltaTime, MoveForward, MoveBackward, MoveLeft, MoveRight, MoveUp, MoveDown, LookDown, LookUp, LookLeft, LookRight);
 
