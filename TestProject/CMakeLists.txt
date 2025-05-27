@@ -12,7 +12,7 @@ set(UTCE_INSTALL_DIR ${CMAKE_CURRENT_BINARY_DIR}/_deps/utce-build)
 
 project(TestProject)
 
-set(CMAKE_C_STANDARD 99)
+set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED True)
 #
 # TODO: Add project version number
