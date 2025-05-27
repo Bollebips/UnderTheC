@@ -17,13 +17,15 @@ set(CMAKE_C_STANDARD_REQUIRED True)
 #
 # TODO: Add project version number
 
-add_subdirectory(${UTCE_SOURCE_DIR} ${UTCE_INSTALL_DIR})
+FetchContent_Declare(
+    UTCe
+    SOURCE_DIR ${CMAKE_SOURCE_DIR}/../Engine
+)
+
+FetchContent_MakeAvailable(UTCe)
 
 file(GLOB_RECURSE SOURCE_FILES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/*.c)
 add_Executable(TestProject ${SOURCE_FILES})
-
-target_compile_definitions(UTCe PUBLIC DEBUG)
-add_dependencies(TestProject UTCe)
 
 set_target_properties(TestProject PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/$<CONFIG>)
 

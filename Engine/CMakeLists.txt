@@ -4,6 +4,8 @@ include(FetchContent)
 
 project(UnderTheC_Engine)
 
+set(FETCHCONTENT_BASE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/_deps CACHE PATH "" FORCE)
+
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED True)
 
@@ -49,6 +51,10 @@ endif()
 file(GLOB_RECURSE SOURCE_FILES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c")
 
 add_library(UTCe SHARED ${SOURCE_FILES})
+
+#TODO: get rid of this and find a standard define based on configuration
+# or at the very least make this private?
+target_compile_definitions(UTCe PUBLIC DEBUG)
 
 target_compile_definitions(UTCe PRIVATE UTCeEXPORT )
 #TODO: This should probably be included privately, but publically
