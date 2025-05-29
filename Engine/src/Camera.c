@@ -21,7 +21,16 @@ void CameraProcessInput(Camera* camera, float deltaTime)
 
 void CameraRecieveInput(Camera* camera, int key, int action)
 {
-    int value = action == GLFW_PRESS ? 1 : -1;
+    int value = 0;
+    switch(action)
+    {
+        case GLFW_PRESS:
+            value = 1;
+            break;
+        case GLFW_RELEASE:
+            value = -1;
+            break;
+    }
 
     switch(key)
     {

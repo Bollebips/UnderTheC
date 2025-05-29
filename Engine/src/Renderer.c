@@ -105,7 +105,7 @@ void Render(Renderer* renderer)
 
         glBindImageTexture(0, renderer->Texture.Handle, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
         glDispatchCompute(numGroupsX, numGroupsY, 1);
-        glMemoryBarrier(GL_ALL_BARRIER_BITS);
+        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
         BlitFramebufferToSwapchain(renderer->Framebuffer, &renderer->Texture);
 
