@@ -40,13 +40,17 @@ void main()
     vec2 dimensions = imageSize(renderTarget);
     ivec2 pixelCoord = ivec2(gl_GlobalInvocationID.xy);
 
+    if (pixelCoord.x >= dimensions.x || pixelCoord.y >= dimensions.y)
+    {
+        return;
+    }
+
     vec2 clipSpacePixelCoord = vec2 //[-1, 1]
     (
         -(float(pixelCoord.x * 2 - dimensions.x) / dimensions.x),
         -(float(pixelCoord.y * 2 - dimensions.y) / dimensions.y)
     );
 
-    //Viewport
     vec3 viewportU = viewportDimensions.x * cameraRight;
     vec3 viewportV = viewportDimensions.y * cameraUp;
 
