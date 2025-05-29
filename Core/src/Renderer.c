@@ -56,7 +56,20 @@ bool RendererInit(Renderer* renderer)
         .FarPlaneDistance = 50.0f,
         .VerticalFov = 65.0f
     };
-    glm_translate(renderer->Camera.Transform.raw, (vec3){0, 1, -1});
+
+    vec3 startLocation = {1.0f, 1.5f, 1.5f};
+    vec3 lookTarget = {0.0f, 0.0f, 0.0f};
+    vec3 right, up, forward;
+    glm_vec3_sub(lookTarget, startLocation, forward);
+    glm_vec3_normalize(forward);
+
+    glm_vec3_crossn(forward, GLM_YUP, right);
+    glm_vec3_crossn(right, forward, up);
+
+    glm_vec3_copy(right, renderer->Camera.Transform.raw[0]);
+    glm_vec3_copy(up, renderer->Camera.Transform.raw[1]);
+    glm_vec3_copy(forward, renderer->Camera.Transform.raw[2]);
+    glm_vec3_copy(startLocation, renderer->Camera.Transform.raw[3]);
 
     glCreateFramebuffers(1, &renderer->Framebuffer);
     renderer->Texture = CreateTexture(width, height);
@@ -93,7 +106,7 @@ void Render(Renderer* renderer)
 
         CameraProcessInput(&renderer->Camera, deltaTime);
 
-        glClearColor(0, 0.5f, 0.75f, 1);
+        glClearColor(0.5f, 0.7f, 1.0f, 1);
         glClear(GL_COLOR_BUFFER_BIT);
 
         glUseProgram(renderer->ShaderProgram);

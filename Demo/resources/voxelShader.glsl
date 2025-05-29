@@ -13,11 +13,11 @@ const int maxSteps = 32;
 
 const int voxelBrickSize = 4;
 const float cubeWidth = 1.0f / voxelBrickSize;
-const uint64_t voxelBrick = 0xA5A5F000FF88FFFFul;
-//1010 0101 1010 0101;
-//1111 0000 0000 0000;
-//1111 1111 1000 1000;
-//1111 1111 1111 1111;
+const uint64_t voxelBrick = 0x5A5A000F88FFFFFFul;
+//0101 1010 0101 1010
+//0000 0000 0000 1111
+//1000 1000 1111 1111
+//1111 1111 1111 1111
 
 #define cameraRight vec3(cameraTransform[0])
 #define cameraUp vec3(cameraTransform[1])
@@ -47,8 +47,8 @@ void main()
 
     vec2 clipSpacePixelCoord = vec2 //[-1, 1]
     (
-        -(float(pixelCoord.x * 2 - dimensions.x) / dimensions.x),
-        -(float(pixelCoord.y * 2 - dimensions.y) / dimensions.y)
+        float(pixelCoord.x * 2 - dimensions.x) / dimensions.x,
+        float(pixelCoord.y * 2 - dimensions.y) / dimensions.y
     );
 
     vec3 viewportU = viewportDimensions.x * cameraRight;
@@ -56,8 +56,8 @@ void main()
 
     vec3 pixelPos =
         cameraPos +
-        -viewportU * clipSpacePixelCoord.x * 0.5f +
-        -viewportV * clipSpacePixelCoord.y * 0.5f +
+        viewportU * clipSpacePixelCoord.x * 0.5f +
+        viewportV * clipSpacePixelCoord.y * 0.5f +
         cameraForward * nearPlaneDistance;
 
     Ray ray = Ray(pixelPos, normalize(pixelPos - cameraPos));
