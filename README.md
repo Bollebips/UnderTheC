@@ -30,14 +30,14 @@ The dream is to expand this project into a reusable voxel game engine to explore
 
 VoxC uses CMake to build.
 
-```
+``` sh
 git clone https://github.com/Bollebips/VoxC.git
 cd VoxC/Demo
 
 mkdir build
 cd build
 cmake ..
-cmake --build .
+cmake --build . -j
 ```
 
 Tested on Windows 11 using Visual Studio 2022 and on Arch Linux using Make.
