@@ -15,6 +15,7 @@ typedef struct Renderer
     Texture Texture;
     GLuint ShaderProgram;
     GLuint Framebuffer;
+    GLint ViewportDimensionsAttribute;
 } Renderer;
 
 int RendererInit(Renderer* renderer);
@@ -23,6 +24,6 @@ void RendererCleanup(Renderer* renderer);
 const GLuint CreateFramebufferWithTexture(const Texture* texture);
 void BlitFramebufferToSwapchain(const GLuint framebuffer, const Texture* texture);
 
-static bool TryAttachTextureToFramebuffer(const GLuint framebufferHandle, const Texture* texture);
+static void AttachTextureToFramebuffer(Renderer* renderer);
 
 #endif // RENDERER_H

@@ -5,13 +5,16 @@
 - [X] better ray direction calculation
 - [X] extract camera code out of shader
 - [X] make worker count correct
-- [ ] windows build support
+- [X] windows build support
 - [X] make camera movement framerate independant
 - [X] camera rotation
 - [ ] fix crash when window becomes 0 pixels
 - [X] check memory leaks
-- [ ] restructure engine/app hierarchy
+- [X] restructure engine/app hierarchy
 - [X] shaders in resource folder
+- [ ] cleanup
+- [ ] change name to VoxC
+- [ ] add readme
 - [ ] ambiant occlusion
   - send new ray in direction of reflection
   - check hit distance of reflected ray

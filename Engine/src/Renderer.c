@@ -2,6 +2,7 @@
 
 #include <stdlib.h>
 #include <time.h>
+#include <math.h>
 
 #include <Logger.h>
 #include <Utils/FileIO.h>
@@ -44,25 +45,28 @@ int RendererInit(Renderer* renderer)
 
     glViewport(0, 0, width, height);
 
-    /* glewExperimental = GL_TRUE; */
-    /* GLenum glewInitResult = glewInit(); */
-    /* LogAssert(glewInitResult != GLEW_OK, "Glew did not initialize correctly."); */
-
     GLuint computeShaderHandle = CreateComputeShader("resources/voxelShader.glsl");
 
     GLuint shaderProgram = glCreateProgram();
     glAttachShader(shaderProgram, computeShaderHandle);
     glLinkProgram(shaderProgram);
     renderer->ShaderProgram = shaderProgram;
+    glUseProgram(renderer->ShaderProgram);
+
+    renderer->Camera = (Camera)
+    {
+        .Transform = GLMS_MAT4_IDENTITY,
+        .Speed = 1.0f,
+        .AngularSpeed = 1.0f,
+        .NearPlaneDistance = 0.01f,
+        .FarPlaneDistance = 50.0f,
+        .VerticalFov = 65.0f
+    };
+    glm_translate(renderer->Camera.Transform.raw, (vec3){0, 1, -1});
 
     renderer->Texture = CreateTexture(width, height);
-
-    renderer->Framebuffer = CreateFramebufferWithTexture(&renderer->Texture);
-
-    renderer->Camera.Transform = GLMS_MAT4_IDENTITY;
-    glm_translate(renderer->Camera.Transform.raw, (vec3){0, 1, -1});
-    renderer->Camera.Speed = 1.0f;
-    renderer->Camera.AngularSpeed = 1.0f;
+    glCreateFramebuffers(1, &renderer->Framebuffer);
+    AttachTextureToFramebuffer(renderer);
 
     return EXIT_SUCCESS;
 }
@@ -77,6 +81,9 @@ void Render(Renderer* renderer)
     const GLuint workGroupSizeX = 16;
     const GLuint workGroupSizeY = 16;
 
+    float averageDeltaTime = 0;
+    u64 deltaTimeSampleCount = 0;
+
     //Disable v-sync
     /* glfwSwapInterval(0); */
 
@@ -86,6 +93,9 @@ void Render(Renderer* renderer)
         float deltaTime = (currentTime.tv_sec - prevTime.tv_sec) +
                            (currentTime.tv_nsec - prevTime.tv_nsec) * 1e-9;
         timespec_get(&prevTime, TIME_UTC);
+
+        averageDeltaTime = ((averageDeltaTime * deltaTimeSampleCount) + deltaTime) / (deltaTimeSampleCount + 1);
+        deltaTimeSampleCount++;
 
         CameraProcessInput(&renderer->Camera, deltaTime, MoveForward, MoveBackward, MoveLeft, MoveRight, MoveUp, MoveDown, LookDown, LookUp, LookLeft, LookRight);
 
@@ -97,8 +107,7 @@ void Render(Renderer* renderer)
         {
             glDeleteTextures(1, &renderer->Texture.Handle);
             renderer->Texture = CreateTexture(width, height);
-            bool success = TryAttachTextureToFramebuffer(renderer->Framebuffer, &renderer->Texture);
-            LogAssert(success, "Failed to attach texture to framebuffer after resize.");
+            AttachTextureToFramebuffer(renderer);
         }
 
         glClearColor(0, 0.5f, 0.75f, 1);
@@ -113,7 +122,6 @@ void Render(Renderer* renderer)
 
         glBindImageTexture(0, renderer->Texture.Handle, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
         glDispatchCompute(numGroupsX, numGroupsY, 1);
-        glDispatchCompute(width / 16, height / 16, 1);
         glMemoryBarrier(GL_ALL_BARRIER_BITS);
 
         BlitFramebufferToSwapchain(renderer->Framebuffer, &renderer->Texture);
@@ -121,6 +129,8 @@ void Render(Renderer* renderer)
         glfwSwapBuffers(renderer->Window);
         glfwPollEvents();
     }
+
+    LogInfo("Average deltatime = %f", averageDeltaTime);
 }
 
 void RendererCleanup(Renderer* renderer)
@@ -150,30 +160,28 @@ static GLuint CreateComputeShader(const char* shaderFilePath)
     return voxelShader;
 }
 
-const GLuint CreateFramebufferWithTexture(const Texture* texture)
+void AttachTextureToFramebuffer(Renderer* renderer)
 {
-    GLuint result;
-    glCreateFramebuffers(1, &result);
-
-    bool success = TryAttachTextureToFramebuffer(result, texture);
-
-    LogAssert(success, "Failed to create framebuffer.");
-
-    return result;
-}
-
-bool TryAttachTextureToFramebuffer(const GLuint framebufferHandle, const Texture* texture)
-{
-    glNamedFramebufferTexture(framebufferHandle, GL_COLOR_ATTACHMENT0, texture->Handle, 0);
+    glNamedFramebufferTexture(renderer->Framebuffer, GL_COLOR_ATTACHMENT0, renderer->Texture.Handle, 0);
 
     if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
     {
         LogError("Framebuffer is not complete.");
-        glDeleteFramebuffers(1, &framebufferHandle);
-        return false;
+        glDeleteFramebuffers(1, &renderer->Framebuffer);
+        exit(1);
     }
 
-    return true;
+    renderer->ViewportDimensionsAttribute = glGetUniformLocation(renderer->ShaderProgram, "viewportDimensions");
+    float viewportHeight = renderer->Camera.NearPlaneDistance * tanf(glm_rad(renderer->Camera.VerticalFov * 0.5f)) * 2.0f;
+    vec4 viewportDimensions =
+    {
+        viewportHeight * ((float)renderer->Texture.Width / (float)renderer->Texture.Height),
+        viewportHeight,
+        renderer->Camera.NearPlaneDistance,
+        renderer->Camera.FarPlaneDistance
+    };
+
+    glUniform4fv(renderer->ViewportDimensionsAttribute, 1, (const GLfloat*)&viewportDimensions);
 }
 
 void BlitFramebufferToSwapchain(const GLuint framebuffer, const Texture* texture)

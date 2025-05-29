@@ -1,25 +1,31 @@
 #version 460 core
 #extension GL_ARB_gpu_shader_int64 : require
 
-uniform mat4 cameraTransform;
+layout (local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
 
-const float vFov = 65;
+layout (rgba32f, binding = 0) uniform writeonly image2D renderTarget;
 
-const float nearPlaneDistance = 0.01;
-const float farPlaneDistance = 50.0;
+layout(location = 0) uniform mat4 cameraTransform;
+layout(location = 1) uniform vec4 viewportDimensions;
 
-const float collisionDistance = 0.0001;
+const float collisionDistance = 0.001f;
 const int maxSteps = 32;
 
 const int voxelBrickSize = 4;
+const float cubeWidth = 1.0f / voxelBrickSize;
 const uint64_t voxelBrick = 0xA5A5F000FF88FFFFul;
 //1010 0101 1010 0101;
 //1111 0000 0000 0000;
 //1111 1111 1000 1000;
 //1111 1111 1111 1111;
 
-layout (local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
-layout (rgba32f, binding = 0) uniform writeonly image2D renderTarget;
+#define cameraRight vec3(cameraTransform[0])
+#define cameraUp vec3(cameraTransform[1])
+#define cameraForward vec3(cameraTransform[2])
+#define cameraPos vec3(cameraTransform[3])
+
+#define nearPlaneDistance viewportDimensions.z
+#define farPlaneDistance viewportDimensions.w
 
 struct Ray
 {
@@ -27,9 +33,7 @@ struct Ray
     vec3 Direction;
 };
 
-float SignedDistanceFromSphere(vec3 sphereCenter, float sphereRadius, vec3 point);
 float SignedDistanceFromCube(vec3 cubeCenter, float cubeSize, vec3 point);
-bool HitSphere(vec3 sphereCenter, float sphereRadius, vec3 rayOrigin, vec3 rayDirection);
 
 void main()
 {
@@ -42,30 +46,20 @@ void main()
         -(float(pixelCoord.y * 2 - dimensions.y) / dimensions.y)
     );
 
-    //Camera
-    vec3 cameraRight = vec3(cameraTransform[0]);
-    vec3 cameraUp = vec3(cameraTransform[1]);
-    vec3 cameraForward = vec3(cameraTransform[2]);
-    vec3 cameraPos = vec3(cameraTransform[3]);
-
     //Viewport
-    float viewportHeight = nearPlaneDistance * tan(radians(vFov * 0.5)) * 2.0;
-    float viewportWidth = viewportHeight * (dimensions.x / dimensions.y);
-    vec3 viewportU = viewportWidth * cameraRight;
-    vec3 viewportV = viewportHeight * cameraUp;
+    vec3 viewportU = viewportDimensions.x * cameraRight;
+    vec3 viewportV = viewportDimensions.y * cameraUp;
 
     vec3 pixelPos =
         cameraPos +
-        -viewportU * clipSpacePixelCoord.x * 0.5 +
-        -viewportV * clipSpacePixelCoord.y * 0.5 +
+        -viewportU * clipSpacePixelCoord.x * 0.5f +
+        -viewportV * clipSpacePixelCoord.y * 0.5f +
         cameraForward * nearPlaneDistance;
 
     Ray ray = Ray(pixelPos, normalize(pixelPos - cameraPos));
 
-    float cubeWidth = 1.0 / voxelBrickSize;
-
     int stepCount = 0;
-    float totalDistance = 0;
+    float totalDistance = 0.0f;
     float minDistance = farPlaneDistance;
     bool hit = false;
     vec3 hitNormal;
@@ -73,7 +67,7 @@ void main()
     while(totalDistance < farPlaneDistance)
     {
         float distance = farPlaneDistance ;
-        vec3 hitCubeCenter = vec3(0);
+        vec3 hitCubeCenter = vec3(0.0f);
 
         for(int i = 0; i < voxelBrickSize * voxelBrickSize * voxelBrickSize; ++i)
         {
@@ -127,29 +121,14 @@ void main()
 
     if(hit && totalDistance > 0)
     {
-        imageStore(renderTarget, pixelCoord, vec4(0.5 * (hitNormal + 1.0), 1.0));
+        imageStore(renderTarget, pixelCoord, vec4(0.5f * (hitNormal + 1.0f), 1.0f));
     }
-}
-
-float SignedDistanceFromSphere(vec3 sphereCenter, float sphereRadius, vec3 point)
-{
-    return distance(sphereCenter, point) - sphereRadius;
 }
 
 float SignedDistanceFromCube(vec3 cubeCenter, float cubeWidth, vec3 point)
 {
     point -= cubeCenter; // ->to origin
-    vec3 distance = abs(point) - (cubeWidth * 0.5);
+    vec3 distance = abs(point) - (cubeWidth * 0.5f);
     float maxComponent = max(max(distance.x, distance.y), distance.z);
-    return length(max(distance, 0.0)) + min(maxComponent, 0.0);
-}
-
-bool HitSphere(vec3 sphereCenter, float sphereRadius, vec3 rayOrigin, vec3 rayDirection)
-{
-    vec3 oc = sphereCenter - rayOrigin;
-    float a = dot(rayDirection, rayDirection);
-    float b = -2.0 * dot(rayDirection, oc);
-    float c = dot(oc, oc) - sphereRadius*sphereRadius;
-    float discriminant = b*b - 4*a*c;
-    return (discriminant >= 0);
+    return length(max(distance, 0.0f)) + min(maxComponent, 0.0f);
 }
