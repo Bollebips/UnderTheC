@@ -3,6 +3,6 @@
 
 #include "Defines.h"
 
-UTCeAPI const char* GetStringFromFile(const char* filePath);
+VoxC_API const char* GetStringFromFile(const char* filePath);
 
 #endif // FILE_IO_H

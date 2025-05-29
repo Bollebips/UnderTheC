@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 4.0)
 include(ExternalProject)
 include(FetchContent)
 
-project(UnderTheC_Engine)
+project(VoxC_Engine)
 
 set(FETCHCONTENT_BASE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/build/_deps CACHE PATH "" FORCE)
 
@@ -11,7 +11,7 @@ set(CMAKE_C_STANDARD_REQUIRED True)
 
 find_package(OpenGL REQUIRED)
 
-set(GLFW_LIBRARY_TYPE STATIC CACHE BOOL "Build shared libs" FORCE)
+set(GLFW_LIBRARY_TYPE STATIC CACHE BOOL "Build static libs" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
@@ -22,6 +22,7 @@ FetchContent_Declare(
     GIT_TAG        3.4
 )
 
+#TODO: Compile to static lib
 FetchContent_Declare(
     glad
     GIT_REPOSITORY https://github.com/Dav1dde/glad.git
@@ -29,6 +30,7 @@ FetchContent_Declare(
     SOURCE_SUBDIR cmake
 )
 
+#TODO: Compile to static lib
 FetchContent_Declare(
     cglm
     GIT_REPOSITORY https://github.com/recp/cglm.git
@@ -50,35 +52,23 @@ endif()
 
 file(GLOB_RECURSE SOURCE_FILES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c")
 
-add_library(UTCe SHARED ${SOURCE_FILES})
+add_library(VoxC SHARED ${SOURCE_FILES})
 
 #TODO: get rid of this and find a standard define based on configuration
 # or at the very least make this private?
-target_compile_definitions(UTCe PUBLIC DEBUG)
+target_compile_definitions(VoxC PUBLIC DEBUG)
 
-target_compile_definitions(UTCe PRIVATE UTCeEXPORT )
+target_compile_definitions(VoxC PRIVATE VOXC_EXPORT)
 #TODO: This should probably be included privately, but publically
-target_include_directories(UTCe PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
+target_include_directories(VoxC PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
-# set_target_properties(glfw PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/$<CONFIG>)
-# set_target_properties(glfw PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/$<CONFIG>)
 set_target_properties(glad PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/$<CONFIG>)
 set_target_properties(glad PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/$<CONFIG>)
 set_target_properties(cglm PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/$<CONFIG>)
 set_target_properties(cglm PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/$<CONFIG>)
-set_target_properties(UTCe PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/$<CONFIG>)
-set_target_properties(UTCe PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/$<CONFIG>)
+set_target_properties(VoxC PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/$<CONFIG>)
+set_target_properties(VoxC PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/$<CONFIG>)
 
-target_link_libraries(UTCe glfw glad cglm OpenGL::GL)
+target_link_libraries(VoxC glfw glad cglm OpenGL::GL)
 
 # TODO: Add -pedantic-errors
-
-# TODO: change the file structure like so, so we can export the library independant of the game project.
-#UnderTheC_Engine/
-#├── src/
-#│   ├── internal.c
-#│   └── internal.h       <-- internal-only
-#├── include/
-#│   └── UTCe/
-#│       └── api.h        <-- public headers
-#├── CMakeLists.txt

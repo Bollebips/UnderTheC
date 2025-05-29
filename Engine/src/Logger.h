@@ -1,6 +1,5 @@
-﻿#pragma once
-#ifndef LOGGER_I
-#define LOGGER_I
+﻿#ifndef LOGGER_H
+#define LOGGER_H
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,10 +9,10 @@
 
 #include "Defines.h"
 
-UTCeAPI void _LogAssert(const char* file, const int line, const bool expression, const char* expressionString, ...);
-UTCeAPI void _LogError(const char* file, const int line, const char* message, ...);
-UTCeAPI void _LogWarning(const char* file, const int line, const char* message, ...);
-UTCeAPI void _LogInfo(const char* file, const int line, const char* message, ...);
+VoxC_API void _LogAssert(const char* file, const int line, const bool expression, const char* expressionString, ...);
+VoxC_API void _LogError(const char* file, const int line, const char* message, ...);
+VoxC_API void _LogWarning(const char* file, const int line, const char* message, ...);
+VoxC_API void _LogInfo(const char* file, const int line, const char* message, ...);
 
 #ifdef DEBUG
 #define LogAssert(expression, ...) _LogAssert(__FILE__, __LINE__, expression, #expression, ## __VA_ARGS__, NULL)

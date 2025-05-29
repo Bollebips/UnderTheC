@@ -3,6 +3,6 @@
 
 #include "Defines.h"
 
-UTCeAPI int RunGame();
+VoxC_API int RunGame();
 
 #endif // GAME_H

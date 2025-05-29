@@ -1,4 +1,5 @@
-﻿#pragma once
+﻿#ifndef DEFINES_H
+#define DEFINES_H
 
 // Unsigned int types.
 typedef unsigned char u8;
@@ -21,18 +22,20 @@ typedef double f64;
 typedef int b32;
 typedef char b8;
 
-#ifdef UTCeEXPORT
+#ifdef VOXC_EXPORT
     // Exports
     #ifdef _MSC_VER
-        #define UTCeAPI __declspec(dllexport)
+        #define VoxC_API __declspec(dllexport)
     #else
-        #define UTCeAPI __attribute__((visibility("default")))
+        #define VoxC_API __attribute__((visibility("default")))
     #endif
 #else
     // Imports
     #ifdef _MSC_VER
-        #define UTCeAPI __declspec(dllimport)
+        #define VoxC_API __declspec(dllimport)
     #else
-        #define UTCeAPI
+        #define VoxC_API
     #endif
 #endif
+
+#endif // DEFINES_H
