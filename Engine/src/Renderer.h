@@ -18,12 +18,15 @@ typedef struct Renderer
     GLint ViewportDimensionsAttribute;
 } Renderer;
 
-int RendererInit(Renderer* renderer);
+bool RendererInit(Renderer* renderer);
 void Render(Renderer* renderer);
 void RendererCleanup(Renderer* renderer);
 const GLuint CreateFramebufferWithTexture(const Texture* texture);
 void BlitFramebufferToSwapchain(const GLuint framebuffer, const Texture* texture);
 
 static void AttachTextureToFramebuffer(Renderer* renderer);
+static GLuint CreateComputeShader(const char*);
+static void GlfwKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
+static void GlfwWindowSizeCallback(GLFWwindow* window, int width, int height);
 
 #endif // RENDERER_H

@@ -8,14 +8,18 @@
 typedef struct Camera
 {
     mat4s Transform;
-    float Speed;
+    float LinearSpeed;
     float AngularSpeed;
+
+    vec3s AxisInput;
+    vec2s RotationInput;
+
     float NearPlaneDistance;
     float FarPlaneDistance;
     float VerticalFov;
 } Camera;
 
-void CameraProcessInput(Camera* camera, float deltaTime, bool moveForward, bool moveBackward, bool moveLeft, bool moveRight, bool moveUp, bool moveDown, bool lookDown, bool lookUp, bool lookLeft, bool lookRight);
-
+void CameraProcessInput(Camera* camera, float deltaTime);
+void CameraRecieveInput(Camera* camera, int key, int action);
 
 #endif // CAMERA_H

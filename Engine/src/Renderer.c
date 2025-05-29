@@ -7,21 +7,12 @@
 #include <Logger.h>
 #include <Utils/FileIO.h>
 
-static GLuint CreateComputeShader(const char*);
-static void GlfwKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
-
-static bool MoveUp, MoveDown,
-            MoveLeft, MoveRight,
-            MoveForward, MoveBackward,
-            LookUp, LookDown,
-            LookLeft, LookRight = false;
-
-int RendererInit(Renderer* renderer)
+bool RendererInit(Renderer* renderer)
 {
     if(glfwInit() == false)
     {
         LogError("Failed to initialize glfw.");
-        return EXIT_FAILURE;
+        return false;
     }
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -31,17 +22,20 @@ int RendererInit(Renderer* renderer)
 
     int width = 640;
     int height = 480;
-    renderer->Window = glfwCreateWindow(width, height, "Voxel renderer", NULL, NULL);
-    LogAssert(renderer->Window != NULL, "GLFW window creation failed.");
+    GLFWwindow* window = glfwCreateWindow(width, height, "Voxel renderer", NULL, NULL);
+    LogAssert(window != NULL, "GLFW window creation failed.");
+    renderer->Window = window;
+    glfwSetWindowUserPointer(window, renderer);
 
-    glfwMakeContextCurrent(renderer->Window);
+    glfwMakeContextCurrent(window);
 
     int version = gladLoadGL(glfwGetProcAddress);
     LogInfo("GL %d.%d", GLAD_VERSION_MAJOR(version), GLAD_VERSION_MINOR(version));
 
     LogInfo("Graphics device: %s", glGetString(GL_RENDERER));
 
-    glfwSetKeyCallback(renderer->Window, GlfwKeyCallback);
+    glfwSetKeyCallback(window, GlfwKeyCallback);
+    glfwSetWindowSizeCallback(window, GlfwWindowSizeCallback);
 
     glViewport(0, 0, width, height);
 
@@ -50,13 +44,13 @@ int RendererInit(Renderer* renderer)
     GLuint shaderProgram = glCreateProgram();
     glAttachShader(shaderProgram, computeShaderHandle);
     glLinkProgram(shaderProgram);
+    glUseProgram(shaderProgram);
     renderer->ShaderProgram = shaderProgram;
-    glUseProgram(renderer->ShaderProgram);
 
     renderer->Camera = (Camera)
     {
         .Transform = GLMS_MAT4_IDENTITY,
-        .Speed = 1.0f,
+        .LinearSpeed = 1.0f,
         .AngularSpeed = 1.0f,
         .NearPlaneDistance = 0.01f,
         .FarPlaneDistance = 50.0f,
@@ -64,11 +58,11 @@ int RendererInit(Renderer* renderer)
     };
     glm_translate(renderer->Camera.Transform.raw, (vec3){0, 1, -1});
 
-    renderer->Texture = CreateTexture(width, height);
     glCreateFramebuffers(1, &renderer->Framebuffer);
+    renderer->Texture = CreateTexture(width, height);
     AttachTextureToFramebuffer(renderer);
 
-    return EXIT_SUCCESS;
+    return true;
 }
 
 void Render(Renderer* renderer)
@@ -97,18 +91,7 @@ void Render(Renderer* renderer)
         averageDeltaTime = ((averageDeltaTime * deltaTimeSampleCount) + deltaTime) / (deltaTimeSampleCount + 1);
         deltaTimeSampleCount++;
 
-        CameraProcessInput(&renderer->Camera, deltaTime, MoveForward, MoveBackward, MoveLeft, MoveRight, MoveUp, MoveDown, LookDown, LookUp, LookLeft, LookRight);
-
-        int width, height;
-
-        glfwGetFramebufferSize(renderer->Window, &width, &height);
-
-        if(width != renderer->Texture.Width || height != renderer->Texture.Height)
-        {
-            glDeleteTextures(1, &renderer->Texture.Handle);
-            renderer->Texture = CreateTexture(width, height);
-            AttachTextureToFramebuffer(renderer);
-        }
+        CameraProcessInput(&renderer->Camera, deltaTime);
 
         glClearColor(0, 0.5f, 0.75f, 1);
         glClear(GL_COLOR_BUFFER_BIT);
@@ -117,8 +100,8 @@ void Render(Renderer* renderer)
 
         glUniformMatrix4fv(cameraTransformAttribute, 1, GL_FALSE, renderer->Camera.Transform.raw[0]);
 
-        GLuint numGroupsX = (width + workGroupSizeX - 1) / workGroupSizeX;
-        GLuint numGroupsY = (height + workGroupSizeY - 1) / workGroupSizeY;
+        GLuint numGroupsX = (renderer->Texture.Width + workGroupSizeX - 1) / workGroupSizeX;
+        GLuint numGroupsY = (renderer->Texture.Height + workGroupSizeY - 1) / workGroupSizeY;
 
         glBindImageTexture(0, renderer->Texture.Handle, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
         glDispatchCompute(numGroupsX, numGroupsY, 1);
@@ -130,7 +113,7 @@ void Render(Renderer* renderer)
         glfwPollEvents();
     }
 
-    LogInfo("Average deltatime = %f", averageDeltaTime);
+    LogInfo("Average deltatime = %f ms", averageDeltaTime * 1000);
 }
 
 void RendererCleanup(Renderer* renderer)
@@ -139,7 +122,7 @@ void RendererCleanup(Renderer* renderer)
     glfwTerminate();
 }
 
-static GLuint CreateComputeShader(const char* shaderFilePath)
+GLuint CreateComputeShader(const char* shaderFilePath)
 {
     char statusLog[512];
     GLuint shaderCompileStatus;
@@ -173,9 +156,10 @@ void AttachTextureToFramebuffer(Renderer* renderer)
 
     renderer->ViewportDimensionsAttribute = glGetUniformLocation(renderer->ShaderProgram, "viewportDimensions");
     float viewportHeight = renderer->Camera.NearPlaneDistance * tanf(glm_rad(renderer->Camera.VerticalFov * 0.5f)) * 2.0f;
+    float aspectRatio = ((float)renderer->Texture.Width / (float)renderer->Texture.Height);
     vec4 viewportDimensions =
     {
-        viewportHeight * ((float)renderer->Texture.Width / (float)renderer->Texture.Height),
+        viewportHeight * aspectRatio,
         viewportHeight,
         renderer->Camera.NearPlaneDistance,
         renderer->Camera.FarPlaneDistance
@@ -198,81 +182,21 @@ void BlitFramebufferToSwapchain(const GLuint framebuffer, const Texture* texture
     glClear(GL_COLOR_BUFFER_BIT);
 }
 
-static void GlfwKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
+void GlfwKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-    if(action == GLFW_PRESS)
+    Renderer* renderer = glfwGetWindowUserPointer(window);
+    CameraRecieveInput(&renderer->Camera, key, action);
+
+    if(action == GLFW_PRESS && key == GLFW_KEY_ESCAPE)
     {
-        switch(key)
-        {
-            case GLFW_KEY_ESCAPE:
-                glfwSetWindowShouldClose(window, true);
-                break;
-            case GLFW_KEY_W:
-                MoveForward = true;
-                break;
-            case GLFW_KEY_A:
-                MoveLeft = true;
-                break;
-            case GLFW_KEY_S:
-                MoveBackward = true;
-                break;
-            case GLFW_KEY_D:
-                MoveRight = true;
-                break;
-            case GLFW_KEY_E:
-                MoveUp = true;
-                break;
-            case GLFW_KEY_Q:
-                MoveDown = true;
-                break;
-             case GLFW_KEY_UP:
-                LookUp = true;
-                break;
-            case GLFW_KEY_DOWN:
-                LookDown = true;
-                break;
-             case GLFW_KEY_LEFT:
-                LookLeft = true;
-                break;
-            case GLFW_KEY_RIGHT:
-                LookRight = true;
-                break;
-        }
+        glfwSetWindowShouldClose(window, true);
     }
-    else if(action == GLFW_RELEASE)
-    {
-        switch(key)
-        {
-            case GLFW_KEY_W:
-                MoveForward = false;
-                break;
-            case GLFW_KEY_A:
-                MoveLeft = false;
-                break;
-            case GLFW_KEY_S:
-                MoveBackward = false;
-                break;
-            case GLFW_KEY_D:
-                MoveRight = false;
-                break;
-            case GLFW_KEY_E:
-                MoveUp = false;
-                break;
-            case GLFW_KEY_Q:
-                MoveDown = false;
-                break;
-            case GLFW_KEY_UP:
-                LookUp = false;
-                break;
-            case GLFW_KEY_DOWN:
-                LookDown = false;
-                break;
-            case GLFW_KEY_LEFT:
-                LookLeft = false;
-                break;
-            case GLFW_KEY_RIGHT:
-                LookRight = false;
-                break;
-        }
-    }
+}
+
+void GlfwWindowSizeCallback(GLFWwindow* window, int width, int height)
+{
+    Renderer* renderer = glfwGetWindowUserPointer(window);
+    glDeleteTextures(1, &renderer->Texture.Handle);
+    renderer->Texture = CreateTexture(width, height);
+    AttachTextureToFramebuffer(renderer);
 }

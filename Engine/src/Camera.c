@@ -1,7 +1,9 @@
 #include "Camera.h"
-#include <Logger.h>
 
-void CameraProcessInput(Camera* camera, float deltaTime, bool moveForward, bool moveBackward, bool moveLeft, bool moveRight, bool moveUp, bool moveDown, bool lookDown, bool lookUp, bool lookLeft, bool lookRight)
+#include <Logger.h>
+#include <GLFW/glfw3.h>
+
+void CameraProcessInput(Camera* camera, float deltaTime)
 {
     vec3 worldUp;
     mat4 inverseTransform;
@@ -9,57 +11,49 @@ void CameraProcessInput(Camera* camera, float deltaTime, bool moveForward, bool 
     glm_vec3_rotate_m4(inverseTransform, GLM_YUP, worldUp);
     glm_vec3_normalize(worldUp);
 
-    if(moveForward)
-    {
-        vec3 translation;
-        glm_vec3_scale_as(GLM_ZUP, camera->Speed * deltaTime, translation);
-        glm_translate(camera->Transform.raw, translation);
-    }
-    if(moveBackward)
-    {
-        vec3 translation;
-        glm_vec3_scale_as(GLM_ZUP, -1 * camera->Speed * deltaTime, translation);
-        glm_translate(camera->Transform.raw, translation);
-    }
-    if(moveLeft)
-    {
-        vec3 translation;
-        glm_vec3_scale_as(GLM_XUP, -1 * camera->Speed * deltaTime, translation);
-        glm_translate(camera->Transform.raw, translation);
-    }
-    if(moveRight)
-    {
-        vec3 translation;
-        glm_vec3_scale_as(GLM_XUP, camera->Speed * deltaTime, translation);
-        glm_translate(camera->Transform.raw, translation);
-    }
-    if(moveUp)
-    {
-        vec3 translation;
-        glm_vec3_scale_as(worldUp, camera->Speed * deltaTime, translation);
-        glm_translate(camera->Transform.raw, translation);
-    }
-    if(moveDown)
-    {
-        vec3 translation;
-        glm_vec3_scale_as(worldUp, -camera->Speed * deltaTime, translation);
-        glm_translate(camera->Transform.raw, translation);
-    }
+    vec3 translation;
+    glm_vec3_scale_as(camera->AxisInput.raw, camera->LinearSpeed * deltaTime, translation);
+    glm_translate(camera->Transform.raw, translation);
 
-    if(lookDown)
+    glm_rotate_x(camera->Transform.raw, camera->RotationInput.x * camera->AngularSpeed * deltaTime, camera->Transform.raw);
+    glm_rotate(camera->Transform.raw, camera->RotationInput.y * camera->AngularSpeed * deltaTime, worldUp);
+}
+
+void CameraRecieveInput(Camera* camera, int key, int action)
+{
+    int value = action == GLFW_PRESS ? 1 : -1;
+
+    switch(key)
     {
-        glm_rotate_x(camera->Transform.raw, -camera->AngularSpeed * deltaTime, camera->Transform.raw);
-    }
-    if(lookUp)
-    {
-        glm_rotate_x(camera->Transform.raw, camera->AngularSpeed * deltaTime, camera->Transform.raw);
-    }
-    if(lookLeft)
-    {
-        glm_rotate(camera->Transform.raw, -camera->AngularSpeed * deltaTime, worldUp);
-    }
-    if(lookRight)
-    {
-        glm_rotate(camera->Transform.raw, camera->AngularSpeed * deltaTime, worldUp);
+        case GLFW_KEY_W:
+            camera->AxisInput.z += value;
+            break;
+        case GLFW_KEY_S:
+            camera->AxisInput.z -= value;
+            break;
+        case GLFW_KEY_D:
+            camera->AxisInput.x += value;
+            break;
+        case GLFW_KEY_A:
+            camera->AxisInput.x -= value;
+            break;
+        case GLFW_KEY_E:
+            camera->AxisInput.y += value;
+            break;
+        case GLFW_KEY_Q:
+            camera->AxisInput.y -= value;
+            break;
+        case GLFW_KEY_UP:
+            camera->RotationInput.x += value;
+            break;
+        case GLFW_KEY_DOWN:
+            camera->RotationInput.x -= value;
+            break;
+        case GLFW_KEY_RIGHT:
+            camera->RotationInput.y += value;
+            break;
+        case GLFW_KEY_LEFT:
+            camera->RotationInput.y -= value;
+            break;
     }
 }

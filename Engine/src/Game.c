@@ -8,12 +8,12 @@ int RunGame()
 {
     Renderer renderer;
 
-    int rendererInitResult = RendererInit(&renderer);
+    bool rendererInitSuccess = RendererInit(&renderer);
 
-    if(rendererInitResult != EXIT_SUCCESS)
+    if(!rendererInitSuccess)
     {
         RendererCleanup(&renderer);
-        return rendererInitResult;
+        return EXIT_FAILURE;
     }
 
     Render(&renderer);

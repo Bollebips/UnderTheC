@@ -13,6 +13,8 @@
 - [X] restructure engine/app hierarchy
 - [X] shaders in resource folder
 - [ ] cleanup
+  - [ ] cache pointers
+  - [ ] cleaner camera movement code
 - [ ] change name to VoxC
 - [ ] add readme
 - [ ] ambiant occlusion
