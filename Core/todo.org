@@ -1,6 +1,6 @@
 #+title: Voxel raytracing engine todo
 
-* TODO Portfolio-worthy voxel raymarching [66%]
+* TODO Portfolio-worthy voxel raymarching [73%]
 - [X] support image resizing
 - [X] better ray direction calculation
 - [X] extract camera code out of shader
@@ -16,7 +16,7 @@
   - [X] cache pointers
   - [X] cleaner camera movement code
   - [ ] don't log in release mode
-- [ ] change name to VoxC
+- [X] change name to VoxC
 - [ ] add readme
 - [ ] ambiant occlusion
   - send new ray in direction of reflection

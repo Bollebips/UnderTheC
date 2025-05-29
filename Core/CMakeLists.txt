@@ -1,5 +1,4 @@
-cmake_minimum_required(VERSION 4.0)
-include(ExternalProject)
+cmake_minimum_required(VERSION 3.14)
 include(FetchContent)
 
 project(VoxC_Engine)

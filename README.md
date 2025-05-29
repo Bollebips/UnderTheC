@@ -1,4 +1,51 @@
-REQUIREMENTS:
-Cmake (version 4 or higher)
-Python3
-Python-pip
+# VoxC
+
+VoxC is a voxel renderer written in C, using OpenGL.
+It renders using a compute shader which raymarches through a voxel mesh.
+
+## What's next
+
+For now this project is a small demo as a learning experience for me regarding compute shaders and particularly raymarching and voxel rendering.
+
+#### Future additions
+- designing a voxel data format (using sparce octrees)
+- import voxel meshes
+- lighting
+- procedural LOD
+- ...
+
+#### Distant future additions
+The dream is to expand this project into a reusable voxel game engine to explore various topics related to voxels and general game engine design.
+- Vulkan support
+- Multithreaded Entity Component System
+- realtime voxel simulations (water, smoke, ...)
+- ...
+
+-------------------------------------------------------------------------------
+
+## How to build
+
+VoxC uses CMake to build.
+
+```
+git clone https://github.com/Bollebips/VoxC.git
+cd VoxC/Demo
+
+mkdir build
+cd build
+cmake ..
+cmake --build .
+```
+
+Tested on Windows 11 using Visual Studio 2022 and on Arch Linux using Make.
+More testing to follow.
+
+### Requirements
+- [Cmake](https://cmake.org/download/) (version 3.14 or higher)
+- [Python 3](https://www.python.org/downloads/) (necessary for Glad)
+
+### Dependencies
+The necessary dependencies are downloaded and linked automatically through CMake.
+- [GLFW 3.4](https://github.com/glfw/glfw)
+- [glad 2.0.8](https://github.com/Dav1dde/glad)
+- [cglm 0.9.6](https://github.com/recp/cglm)
