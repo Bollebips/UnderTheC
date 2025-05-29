@@ -20,8 +20,8 @@ bool RendererInit(Renderer* renderer)
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
-    int width = 640;
-    int height = 480;
+    int width = 1280;
+    int height = 720;
     GLFWwindow* window = glfwCreateWindow(width, height, "Voxel renderer", NULL, NULL);
     LogAssert(window != NULL, "GLFW window creation failed.");
     renderer->Window = window;
