@@ -12,9 +12,10 @@
 - [X] check memory leaks
 - [X] restructure engine/app hierarchy
 - [X] shaders in resource folder
-- [ ] cleanup
-  - [ ] cache pointers
-  - [ ] cleaner camera movement code
+- [-] cleanup
+  - [X] cache pointers
+  - [X] cleaner camera movement code
+  - [ ] don't log in release mode
 - [ ] change name to VoxC
 - [ ] add readme
 - [ ] ambiant occlusion
