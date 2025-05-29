@@ -3,14 +3,17 @@
 VoxC is a voxel renderer written in C, using OpenGL.
 It renders using a compute shader which raymarches through a voxel mesh.
 
+![Demo](Screenshot.png?raw=true)
+
 ## What's next
 
 For now this project is a small demo as a learning experience for me regarding compute shaders and particularly raymarching and voxel rendering.
 
 #### Future additions
-- designing a voxel data format (using sparce octrees)
-- import voxel meshes
+- designing a performant voxel data format (using sparce octrees)
 - lighting
+- voxel material data
+- import voxel models
 - procedural LOD
 - ...
 
