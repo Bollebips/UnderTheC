@@ -52,3 +52,11 @@ The necessary dependencies are downloaded and linked automatically through CMake
 - [GLFW 3.4](https://github.com/glfw/glfw)
 - [glad 2.0.8](https://github.com/Dav1dde/glad)
 - [cglm 0.9.6](https://github.com/recp/cglm)
+
+
+## Controls
+
+- <kbd>WASD</kbd> to move
+- <kbd>Q</kbd> and <kbd>E</kbd> to move up and down
+- <kbd>Arrows</kbd> to rotate
+- <kbd>Escape</kbd> to quit
