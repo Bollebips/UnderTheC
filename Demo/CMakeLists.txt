@@ -26,19 +26,11 @@ add_Executable(VoxC-Demo ${SOURCE_FILES})
 
 set_target_properties(VoxC-Demo PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/$<CONFIG>)
 
-set(RESOURCE_SRC_DIR ${CMAKE_SOURCE_DIR}/resources)
-set(RESOURCE_DST_DIR ${CMAKE_BINARY_DIR}/$<CONFIG>/resources)
-
-add_custom_command(
-  OUTPUT ${CMAKE_BINARY_DIR}/$<CONFIG>/resources/.timestamp
-  COMMAND ${CMAKE_COMMAND} -E copy_directory ${RESOURCE_SRC_DIR} ${RESOURCE_DST_DIR}
-  COMMAND ${CMAKE_COMMAND} -E remove ${RESOURCE_DST_DIR}/.timestamp
-  DEPENDS ${RESOURCE_SRC_DIR}
-  COMMENT "Copying resources..."
-)
-
+file(REAL_PATH "${CMAKE_SOURCE_DIR}/resources" RESOURCES_SOURCE_DIR)
+set(RESOURCES_BINARY_DIR "$<CONFIG>/resources")
 add_custom_target(copy_resources ALL
-    DEPENDS ${RESOURCE_DST_DIR}/.timestamp
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "${RESOURCES_SOURCE_DIR}" "${CMAKE_BINARY_DIR}/${RESOURCES_BINARY_DIR}"
+    COMMENT "Copying resources directory to ${RESOURCES_BINARY_DIR}"
 )
 
 target_link_libraries(VoxC-Demo VoxC)
