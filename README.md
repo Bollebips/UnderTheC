@@ -31,7 +31,7 @@ The dream is to expand this project into a reusable voxel game engine to explore
 VoxC uses CMake to build.
 
 ``` sh
-git clone https://github.com/Bollebips/VoxC.git
+git clone https://github.com/laurens-moonens/VoxC.git
 cd VoxC/Demo
 
 mkdir build
