@@ -8,6 +8,8 @@ set(FETCHCONTENT_BASE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/build/_deps CACHE PATH "" 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED True)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 find_package(OpenGL REQUIRED)
 
 set(GLFW_LIBRARY_TYPE STATIC CACHE BOOL "Build static libs" FORCE)
@@ -58,6 +60,7 @@ add_library(VoxC SHARED ${SOURCE_FILES})
 target_compile_definitions(VoxC PUBLIC DEBUG)
 
 target_compile_definitions(VoxC PRIVATE VOXC_EXPORT)
+target_include_directories(VoxC PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/glad/gladsources/include)
 #TODO: This should probably be included privately, but publically
 target_include_directories(VoxC PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
