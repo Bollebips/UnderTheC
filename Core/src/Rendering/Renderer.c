@@ -81,6 +81,7 @@ void Render(Renderer* renderer)
     timespec_get(&prevTime, TIME_UTC);
 
     GLint cameraTransformAttribute = glGetUniformLocation(renderer->ShaderProgram, "cameraTransform");
+    GLint octreeAttribute = glGetUniformLocation(renderer->ShaderProgram, "octree");
 
     const GLuint workGroupSizeX = 16;
     const GLuint workGroupSizeY = 16;
@@ -108,6 +109,7 @@ void Render(Renderer* renderer)
         glUseProgram(renderer->ShaderProgram);
 
         glUniformMatrix4fv(cameraTransformAttribute, 1, GL_FALSE, renderer->Camera.Transform.raw[0]);
+        glUniformMatrix4fv(octreeAttribute, 1, GL_FALSE, renderer->Camera.Transform.raw[0]);
 
         GLuint numGroupsX = (renderer->Texture.Width + workGroupSizeX - 1) / workGroupSizeX;
         GLuint numGroupsY = (renderer->Texture.Height + workGroupSizeY - 1) / workGroupSizeY;

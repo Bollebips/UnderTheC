@@ -1,5 +1,6 @@
 #version 460 core
 #extension GL_ARB_gpu_shader_int64 : require
+#extension GL_NV_gpu_shader5 : require
 
 layout (local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
 
@@ -7,6 +8,7 @@ layout (rgba32f, binding = 0) uniform writeonly image2D renderTarget;
 
 layout(location = 0) uniform mat4 cameraTransform;
 layout(location = 1) uniform vec4 viewportDimensions;
+
 
 const float collisionDistance = 0.001f;
 const int maxSteps = 32;
@@ -18,6 +20,17 @@ const uint64_t voxelBrick = 0x5A5A000F88FFFFFFul;
 //0000 0000 0000 1111
 //1000 1000 1111 1111
 //1111 1111 1111 1111
+
+// 1
+//1 1 1 1 1 1 1 1
+
+//0101 1010 0101 1010
+//0000 0000 0000 1111
+
+//1000 1000 1111 1111
+//1111 1111 1111 1111
+
+layout (location = 2) uniform uint8_t octree[9];
 
 #define cameraRight vec3(cameraTransform[0])
 #define cameraUp vec3(cameraTransform[1])
