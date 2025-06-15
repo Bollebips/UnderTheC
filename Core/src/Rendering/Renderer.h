@@ -1,12 +1,13 @@
 #ifndef RENDERER_H
 #define RENDERER_H
 
-/* #include <GL/glew.h> */
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
 
+#include "Rendering/SparseVoxelOctree.h"
 #include "Texture.h"
 #include "Camera.h"
+#include "SparseVoxelOctree.h"
 
 typedef struct Renderer
 {
@@ -16,6 +17,8 @@ typedef struct Renderer
     GLuint ShaderProgram;
     GLuint Framebuffer;
     GLint ViewportDimensionsAttribute;
+
+    SparseVoxelOctree SparseVoxelOctree;
 } Renderer;
 
 bool RendererInit(Renderer* renderer);

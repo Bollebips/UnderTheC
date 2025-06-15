@@ -1,15 +1,15 @@
 #include "Renderer.h"
 
+#include <math.h>
 #include <stdlib.h>
 #include <time.h>
-#include <math.h>
 
 #include <Logger.h>
 #include <Utils/FileIO.h>
 
 bool RendererInit(Renderer* renderer)
 {
-    if(glfwInit() == false)
+    if (glfwInit() == false)
     {
         LogError("Failed to initialize glfw.");
         return false;
@@ -47,15 +47,12 @@ bool RendererInit(Renderer* renderer)
     glUseProgram(shaderProgram);
     renderer->ShaderProgram = shaderProgram;
 
-    renderer->Camera = (Camera)
-    {
-        .Transform = GLMS_MAT4_IDENTITY,
-        .LinearSpeed = 1.0f,
-        .AngularSpeed = 1.0f,
-        .NearPlaneDistance = 0.01f,
-        .FarPlaneDistance = 50.0f,
-        .VerticalFov = 65.0f
-    };
+    renderer->Camera = (Camera){.Transform = GLMS_MAT4_IDENTITY,
+                                .LinearSpeed = 1.0f,
+                                .AngularSpeed = 1.0f,
+                                .NearPlaneDistance = 0.01f,
+                                .FarPlaneDistance = 50.0f,
+                                .VerticalFov = 65.0f};
 
     vec3 startLocation = {1.0f, 1.5f, 1.5f};
     vec3 lookTarget = {0.0f, 0.0f, 0.0f};
@@ -91,14 +88,13 @@ void Render(Renderer* renderer)
     float averageDeltaTime = 0;
     u64 deltaTimeSampleCount = 0;
 
-    //Disable v-sync
+    // Disable v-sync
     /* glfwSwapInterval(0); */
 
     while (!glfwWindowShouldClose(renderer->Window))
     {
         timespec_get(&currentTime, TIME_UTC);
-        float deltaTime = (currentTime.tv_sec - prevTime.tv_sec) +
-                           (currentTime.tv_nsec - prevTime.tv_nsec) * 1e-9;
+        float deltaTime = (currentTime.tv_sec - prevTime.tv_sec) + (currentTime.tv_nsec - prevTime.tv_nsec) * 1e-9;
         timespec_get(&prevTime, TIME_UTC);
 
         averageDeltaTime = ((averageDeltaTime * deltaTimeSampleCount) + deltaTime) / (deltaTimeSampleCount + 1);
@@ -143,11 +139,11 @@ GLuint CreateComputeShader(const char* shaderFilePath)
     const char* shaderSource = GetStringFromFile(shaderFilePath);
     GLuint voxelShader = glCreateShader(GL_COMPUTE_SHADER);
     glShaderSource(voxelShader, 1, &shaderSource, NULL);
-    free((char*) shaderSource);
+    free((char*)shaderSource);
     glCompileShader(voxelShader);
 
     glGetShaderiv(voxelShader, GL_COMPILE_STATUS, &shaderCompileStatus);
-    if(shaderCompileStatus == false)
+    if (shaderCompileStatus == false)
     {
         glGetShaderInfoLog(voxelShader, 512, NULL, statusLog);
         LogError("ComputeShader compilation failed: %s", statusLog);
@@ -160,7 +156,7 @@ void AttachTextureToFramebuffer(Renderer* renderer)
 {
     glNamedFramebufferTexture(renderer->Framebuffer, GL_COLOR_ATTACHMENT0, renderer->Texture.Handle, 0);
 
-    if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
     {
         LogError("Framebuffer is not complete.");
         glDeleteFramebuffers(1, &renderer->Framebuffer);
@@ -170,13 +166,7 @@ void AttachTextureToFramebuffer(Renderer* renderer)
     renderer->ViewportDimensionsAttribute = glGetUniformLocation(renderer->ShaderProgram, "viewportDimensions");
     float viewportHeight = renderer->Camera.NearPlaneDistance * tanf(glm_rad(renderer->Camera.VerticalFov * 0.5f)) * 2.0f;
     float aspectRatio = ((float)renderer->Texture.Width / (float)renderer->Texture.Height);
-    vec4 viewportDimensions =
-    {
-        viewportHeight * aspectRatio,
-        viewportHeight,
-        renderer->Camera.NearPlaneDistance,
-        renderer->Camera.FarPlaneDistance
-    };
+    vec4 viewportDimensions = {viewportHeight * aspectRatio, viewportHeight, renderer->Camera.NearPlaneDistance, renderer->Camera.FarPlaneDistance};
 
     glUniform4fv(renderer->ViewportDimensionsAttribute, 1, (const GLfloat*)&viewportDimensions);
 }
@@ -186,9 +176,7 @@ void BlitFramebufferToSwapchain(const GLuint framebuffer, const Texture* texture
     glBindFramebuffer(GL_READ_FRAMEBUFFER, framebuffer);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 
-    glBlitFramebuffer(0, 0, texture->Width, texture->Height,
-                      0, 0, texture->Width, texture->Height,
-                      GL_COLOR_BUFFER_BIT, GL_NEAREST);
+    glBlitFramebuffer(0, 0, texture->Width, texture->Height, 0, 0, texture->Width, texture->Height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -200,7 +188,7 @@ void GlfwKeyCallback(GLFWwindow* window, int key, int scancode, int action, int 
     Renderer* renderer = glfwGetWindowUserPointer(window);
     CameraRecieveInput(&renderer->Camera, key, action);
 
-    if(action == GLFW_PRESS && key == GLFW_KEY_ESCAPE)
+    if (action == GLFW_PRESS && key == GLFW_KEY_ESCAPE)
     {
         glfwSetWindowShouldClose(window, true);
     }

@@ -60,6 +60,7 @@ add_library(VoxC SHARED ${SOURCE_FILES})
 target_compile_definitions(VoxC PUBLIC DEBUG)
 
 target_compile_definitions(VoxC PRIVATE VOXC_EXPORT)
+#TODO: REMOVE? This is only used for autocomplete to work
 target_include_directories(VoxC PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/glad/gladsources/include)
 #TODO: This should probably be included privately, but publically
 target_include_directories(VoxC PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)

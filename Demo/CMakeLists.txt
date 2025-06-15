@@ -14,15 +14,20 @@ set(CMAKE_C_STANDARD_REQUIRED True)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-#
 # TODO: Add project version number
 
-FetchContent_Declare(
-    VoxC
-    SOURCE_DIR ${CMAKE_SOURCE_DIR}/../Core
-)
+option(USE_LOCAL_VOXC "Use VoxC from a local folder instead of FetchContent" ON)
 
-FetchContent_MakeAvailable(VoxC)
+if(USE_LOCAL_VOXC)
+    add_subdirectory(${CMAKE_SOURCE_DIR}/../Core ${CMAKE_BINARY_DIR}/_deps/voxc-build)
+else()
+    FetchContent_Declare(
+        VoxC
+        SOURCE_DIR ${CMAKE_SOURCE_DIR}/../Core
+    )
+
+    FetchContent_MakeAvailable(VoxC)
+endif()
 
 file(GLOB_RECURSE SOURCE_FILES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/*.c)
 add_Executable(VoxC-Demo ${SOURCE_FILES})
