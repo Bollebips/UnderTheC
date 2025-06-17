@@ -1,6 +1,5 @@
 #version 460 core
 #extension GL_ARB_gpu_shader_int64 : require
-#extension GL_NV_gpu_shader5 : require
 
 layout (local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
 
@@ -30,7 +29,7 @@ const uint64_t voxelBrick = 0x5A5A000F88FFFFFFul;
 //1000 1000 1111 1111
 //1111 1111 1111 1111
 
-layout (location = 2) uniform uint8_t octree[9];
+layout (location = 2) uniform uint octree[9];
 
 #define cameraRight vec3(cameraTransform[0])
 #define cameraUp vec3(cameraTransform[1])
@@ -46,7 +45,33 @@ struct Ray
     vec3 Direction;
 };
 
-float SignedDistanceFromCube(vec3 cubeCenter, float cubeSize, vec3 point);
+struct RayDestination
+{
+    bool WasHit;
+};
+
+RayDestination StepDDA(Ray ray)
+{
+    vec3 cellOrigin = floor(ray.Origin);
+
+    vec3 firstStep = floor(ray.Origin + ray.Direction);
+
+    float deltaX = 1.0f / ray.Direction.x;
+    float deltaY = 1.0f / ray.Direction.y;
+    float deltaZ = 1.0f / ray.Direction.z;
+
+    ray.Origin = 
+
+    return RayDestination(false);
+}
+
+float SignedDistanceFromCube(vec3 cubeCenter, float cubeWidth, vec3 point)
+{
+    point -= cubeCenter; // ->to origin
+    vec3 distance = abs(point) - (cubeWidth * 0.5f);
+    float maxComponent = max(max(distance.x, distance.y), distance.z);
+    return length(max(distance, 0.0f)) + min(maxComponent, 0.0f);
+}
 
 void main()
 {
@@ -83,7 +108,8 @@ void main()
 
     while(totalDistance < farPlaneDistance)
     {
-        float distance = farPlaneDistance ;
+        StepDDA(ray);
+        float distance = farPlaneDistance;
         vec3 hitCubeCenter = vec3(0.0f);
 
         for(int i = 0; i < voxelBrickSize * voxelBrickSize * voxelBrickSize; ++i)
@@ -140,12 +166,4 @@ void main()
     {
         imageStore(renderTarget, pixelCoord, vec4(0.5f * (hitNormal + 1.0f), 1.0f));
     }
-}
-
-float SignedDistanceFromCube(vec3 cubeCenter, float cubeWidth, vec3 point)
-{
-    point -= cubeCenter; // ->to origin
-    vec3 distance = abs(point) - (cubeWidth * 0.5f);
-    float maxComponent = max(max(distance.x, distance.y), distance.z);
-    return length(max(distance, 0.0f)) + min(maxComponent, 0.0f);
 }

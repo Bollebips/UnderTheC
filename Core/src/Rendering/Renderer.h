@@ -18,7 +18,7 @@ typedef struct Renderer
     GLuint Framebuffer;
     GLint ViewportDimensionsAttribute;
 
-    SparseVoxelOctree SparseVoxelOctree;
+    VoxelChunk VoxelChunk;
 } Renderer;
 
 bool RendererInit(Renderer* renderer);

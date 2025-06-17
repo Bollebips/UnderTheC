@@ -17,7 +17,7 @@
 //     return pow(8, levels);
 // }
 
-void PopulateVoxelChunk(SparseVoxelOctree* result, u8 denseData[])
+void PopulateVoxelChunk(SparseVoxelOctree* result, u32 denseData[])
 {
     LogAssert(result != NULL);
 
@@ -35,7 +35,7 @@ void PopulateVoxelChunk(SparseVoxelOctree* result, u8 denseData[])
 
     for (int i = 0; i < voxelArrayLength; ++i)
     {
-        u8 voxelBrick = denseData[i];
+        u32 voxelBrick = denseData[i];
         if (voxelBrick != 0)
         {
             if (result->Length == 0) ArrayAdd(result, 0); // TODO: Better check

@@ -72,6 +72,23 @@ bool RendererInit(Renderer* renderer)
     renderer->Texture = CreateTexture(width, height);
     AttachTextureToFramebuffer(renderer);
 
+    const int voxelArrayLength = 64;
+    u32 voxelArray[voxelArrayLength] = {};
+    voxelArray[0] = 0x50;
+    voxelArray[1] = 0xA0;
+    voxelArray[2] = 0x50;
+    voxelArray[3] = 0xAF;
+    voxelArray[4] = 0x8F;
+    voxelArray[5] = 0x8F;
+    voxelArray[6] = 0xFF;
+    voxelArray[7] = 0xFF;
+
+    LogAssert(sizeof(voxelArray) / sizeof(voxelArray[0]) == pow(VOXEL_CHUNK_SIZE, 3), "Size was %d but should be %f", sizeof(voxelArray) / sizeof(voxelArray[0]), pow(VOXEL_CHUNK_SIZE, 3));
+
+    PopulateVoxelChunk(&renderer->VoxelChunk.Octree, voxelArray);
+
+    LogInfo("%d", renderer->VoxelChunk.Octree.Items[0]);
+
     return true;
 }
 
@@ -109,7 +126,7 @@ void Render(Renderer* renderer)
         glUseProgram(renderer->ShaderProgram);
 
         glUniformMatrix4fv(cameraTransformAttribute, 1, GL_FALSE, renderer->Camera.Transform.raw[0]);
-        glUniformMatrix4fv(octreeAttribute, 1, GL_FALSE, renderer->Camera.Transform.raw[0]);
+        glUniform1iv(octreeAttribute, 9, renderer->VoxelChunk.Octree.Items);
 
         GLuint numGroupsX = (renderer->Texture.Width + workGroupSizeX - 1) / workGroupSizeX;
         GLuint numGroupsY = (renderer->Texture.Height + workGroupSizeY - 1) / workGroupSizeY;

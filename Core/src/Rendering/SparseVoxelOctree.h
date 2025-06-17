@@ -7,7 +7,7 @@
 
 #define VOXEL_CHUNK_SIZE 4
 
-typedef Array(u8) SparseVoxelOctree;
+typedef Array(u32) SparseVoxelOctree;
 
 typedef struct
 {
@@ -15,6 +15,6 @@ typedef struct
 } VoxelChunk;
 
 int CalculateOctreeSize(int denseDataSize);
-void PopulateVoxelChunk(SparseVoxelOctree* result, u8 denseData[]);
+void PopulateVoxelChunk(SparseVoxelOctree* result, u32 denseData[]);
 
 #endif // SPARSE_VOXEL_OCTREE_H
