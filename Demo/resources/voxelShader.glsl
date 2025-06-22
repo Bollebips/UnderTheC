@@ -47,22 +47,86 @@ struct Ray
 
 struct RayDestination
 {
-    bool WasHit;
+    bool Hit;
 };
 
-RayDestination StepDDA(Ray ray)
+RayDestination StepDDA(const Ray ray, float maxDistance)
 {
-    vec3 cellOrigin = floor(ray.Origin);
+    //TODO: scale with different cell size
 
-    vec3 firstStep = floor(ray.Origin + ray.Direction);
+    float cellSize = 1;
 
-    float deltaX = 1.0f / ray.Direction.x;
-    float deltaY = 1.0f / ray.Direction.y;
-    float deltaZ = 1.0f / ray.Direction.z;
+    float dx = ray.Direction.x;
+    float dy = ray.Direction.y;
+    float dz = ray.Direction.z;
+    
+    float ox = ray.Origin.x / cellSize;
+    float oy = ray.Origin.y / cellSize;
+    float oz = ray.Origin.z / cellSize;
 
-    ray.Origin = 
+    float cellSizeSqr = pow(cellSize, 2);
 
-    return RayDestination(false);
+    // TODO: handle 0 division
+    vec3 c = abs(1.0f / ray.Direction);
+
+    ivec3 cell = ivec3(floor(ray.Origin / cellSize));
+    ivec3 cellStep = ivec3(sign(ray.Direction));
+
+    float ax = dx < 0 ?
+        ox - (floor(ox)):
+        (floor(ox) + 1) - ox;
+
+    float ay = dy < 0 ?
+        oy - (floor(oy)):
+        (floor(oy) + 1) - oy;
+
+    float az = dz < 0 ?
+        oz - (floor(oz)):
+        (floor(oz) + 1) - oz;
+
+    float tx = ax * c.x * cellSize;
+    float ty = ay * c.y * cellSize;
+    float tz = az * c.z * cellSize;
+
+    float totalDistance = 0.0f;
+
+    RayDestination result = RayDestination(false);
+
+    while(totalDistance < maxDistance && result.Hit == false)
+    {
+        if(cell == ivec3(0, 0, 0))
+        {
+            result.Hit = true;
+            break;
+        }
+
+        if(tx < ty && tx < tz)
+        {
+            totalDistance = tx;
+            tx += c.x * cellSize;
+            cell.x += cellStep.x;
+        }
+        else if(ty < tx && ty < tz)
+        {
+            totalDistance = ty;
+            ty += c.y * cellSize;
+            cell.y += cellStep.y;
+        }
+        else
+        {
+            totalDistance = tz;
+            tz += c.z * cellSize;
+            cell.z += cellStep.z;
+        }
+
+        vec3 point = ray.Origin + ray.Direction * totalDistance;
+        //if(all(greaterThanEqual(point, vec3(0))) && all(lessThanEqual(point, vec3(cellSize))))
+        
+    }
+
+    vec3 collisionPoint = ray.Origin + ray.Direction * totalDistance;
+
+    return result;
 }
 
 float SignedDistanceFromCube(vec3 cubeCenter, float cubeWidth, vec3 point)
@@ -106,9 +170,15 @@ void main()
     bool hit = false;
     vec3 hitNormal;
 
+    RayDestination result = StepDDA(ray, farPlaneDistance);
+    if(result.Hit)
+    {
+        imageStore(renderTarget, pixelCoord, vec4(1.0f, 0, 0, 1.0f));
+    }
+    else
+    {
     while(totalDistance < farPlaneDistance)
     {
-        StepDDA(ray);
         float distance = farPlaneDistance;
         vec3 hitCubeCenter = vec3(0.0f);
 
@@ -165,5 +235,6 @@ void main()
     if(hit && totalDistance > 0)
     {
         imageStore(renderTarget, pixelCoord, vec4(0.5f * (hitNormal + 1.0f), 1.0f));
+    }
     }
 }
