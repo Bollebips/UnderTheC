@@ -50,19 +50,33 @@ struct RayDestination
     bool Hit;
 };
 
+struct VoxelBrick
+{
+    uint Occupancy;
+    uint AbsoluteIndex;
+    uint Level;
+    float Size;
+    vec3 Center;
+};
+
+bool IsVoxelHit(VoxelBrick voxelBrick, vec3 hitPosition)
+{
+    vec3 voxelHitPercentage = mod(hitPosition, voxelBrick.Size) / voxelBrick.Size; // [0, voxelBrick.Size]
+    ivec3 voxelAxisIndex = ivec3(ceil(voxelHitPercentage - 0.5f)); // [0, 1]
+
+    int voxelIndex = voxelAxisIndex.x + voxelAxisIndex.y * 2 + voxelAxisIndex.z * 4;
+    return ((1 << 0) & octree[voxelBrick.AbsoluteIndex]) != 0;
+}
+
 RayDestination StepDDA(const Ray ray, float maxDistance)
 {
     //TODO: scale with different cell size
 
-    float cellSize = 1;
+    float cellSize = 1f;
+    int level = 0;
+    int minLevel = 1;
 
-    float dx = ray.Direction.x;
-    float dy = ray.Direction.y;
-    float dz = ray.Direction.z;
-    
-    float ox = ray.Origin.x / cellSize;
-    float oy = ray.Origin.y / cellSize;
-    float oz = ray.Origin.z / cellSize;
+    vec3 o = ray.Origin / cellSize;
 
     float cellSizeSqr = pow(cellSize, 2);
 
@@ -72,17 +86,17 @@ RayDestination StepDDA(const Ray ray, float maxDistance)
     ivec3 cell = ivec3(floor(ray.Origin / cellSize));
     ivec3 cellStep = ivec3(sign(ray.Direction));
 
-    float ax = dx < 0 ?
-        ox - (floor(ox)):
-        (floor(ox) + 1) - ox;
+    float ax = ray.Direction.x < 0 ?
+        o.x - (floor(o.x)):
+        (floor(o.x) + 1) - o.x;
 
-    float ay = dy < 0 ?
-        oy - (floor(oy)):
-        (floor(oy) + 1) - oy;
+    float ay = ray.Direction.y < 0 ?
+        o.y - (floor(o.y)):
+        (floor(o.y) + 1) - o.y;
 
-    float az = dz < 0 ?
-        oz - (floor(oz)):
-        (floor(oz) + 1) - oz;
+    float az = ray.Direction.z < 0 ?
+        o.z - (floor(o.z)):
+        (floor(o.z) + 1) - o.z;
 
     float tx = ax * c.x * cellSize;
     float ty = ay * c.y * cellSize;
@@ -91,12 +105,18 @@ RayDestination StepDDA(const Ray ray, float maxDistance)
     float totalDistance = 0.0f;
 
     RayDestination result = RayDestination(false);
+    VoxelBrick v;
 
     while(totalDistance < maxDistance && result.Hit == false)
     {
         if(cell == ivec3(0, 0, 0))
         {
-            result.Hit = true;
+            v.Occupancy = octree[0];
+            v.AbsoluteIndex = 0;
+            v.Level = 0;
+            v.Size = 1;
+            v.Center = vec3(0.5f);
+            result.Hit = IsVoxelHit(v, ray.Origin + ray.Direction * totalDistance);
             break;
         }
 
@@ -118,10 +138,6 @@ RayDestination StepDDA(const Ray ray, float maxDistance)
             tz += c.z * cellSize;
             cell.z += cellStep.z;
         }
-
-        vec3 point = ray.Origin + ray.Direction * totalDistance;
-        //if(all(greaterThanEqual(point, vec3(0))) && all(lessThanEqual(point, vec3(cellSize))))
-        
     }
 
     vec3 collisionPoint = ray.Origin + ray.Direction * totalDistance;
