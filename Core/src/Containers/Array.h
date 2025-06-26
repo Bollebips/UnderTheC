@@ -41,7 +41,7 @@
         {                                                                                                                                                      \
             if (_array->Capacity == 0) _array->Capacity = INITIAL_CAPACITY;                                                                                    \
             else _array->Capacity *= CAPACITY_MULTIPLIER;                                                                                                      \
-            _array->Items = reallocarray(_array->Items, _array->Capacity, sizeof(*_array->Items));                                                             \
+            _array->Items = realloc(_array->Items, _array->Capacity * sizeof(*_array->Items));                                                             \
         }                                                                                                                                                      \
         _array->Items[_array->Length++] = _element;                                                                                                            \
     } while (0)

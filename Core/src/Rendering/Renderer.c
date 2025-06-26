@@ -72,7 +72,6 @@ bool RendererInit(Renderer* renderer)
     renderer->Texture = CreateTexture(width, height);
     AttachTextureToFramebuffer(renderer);
 
-    const int voxelArrayLength = 64;
     u32 voxelArray[64] = {0};
     // voxelArray[0] = 0xFF;
     // voxelArray[1] = 0xFF;

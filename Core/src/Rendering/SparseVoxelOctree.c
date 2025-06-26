@@ -21,7 +21,7 @@ void PopulateVoxelChunk(SparseVoxelOctree* result, u32 denseData[])
 {
     LogAssert(result != NULL);
 
-    int voxelArrayLength = pow(VOXEL_CHUNK_SIZE, 3);
+    int voxelArrayLength = (int) pow(VOXEL_CHUNK_SIZE, 3);
 
     int numLevels = 0;
 

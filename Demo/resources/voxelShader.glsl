@@ -64,7 +64,7 @@ struct VoxelBrick
 {
     uint Occupancy;
     uint AbsoluteIndex;
-    uint Level;
+    int Level;
     vec3 Center;
     // TODO: Specify max tree depth
     uint ParentIndeces[5];
@@ -73,8 +73,8 @@ struct VoxelBrick
 struct VoxelHit
 {
     bool IsHit;
-    uvec3 HitVoxelIndex;
-    uint VoxelIndex;
+    ivec3 HitVoxelIndex;
+    int VoxelIndex;
     vec3 HitNormal;
 };
 
@@ -96,7 +96,7 @@ void StepLevelDownOctree(inout DDA dda, inout VoxelBrick voxelBrick, VoxelHit hi
     voxelBrick.Center += dda.CellSize * (vec3(hit.HitVoxelIndex) - 0.5f); 
 }
 
-void StepLevelUpOctree(inout DDA dda, inout VoxelBrick voxelBrick, VoxelHit hit)
+void StepLevelUpOctree(inout DDA dda, inout VoxelBrick voxelBrick, const VoxelHit hit)
 {
     voxelBrick.AbsoluteIndex = voxelBrick.ParentIndeces[voxelBrick.Level];
     voxelBrick.Level--;
@@ -108,9 +108,9 @@ VoxelHit CheckVoxelHit(const VoxelBrick voxelBrick, const vec3 hitPosition, cons
 {
     float voxelSize = pow(0.5f, voxelBrick.Level);
 
-    uvec3 voxelAxisIndex = uvec3(ceil(hitPosition - voxelBrick.Center));
+    ivec3 voxelAxisIndex = ivec3(ceil(hitPosition - voxelBrick.Center));
 
-    uint voxelIndex = voxelAxisIndex.x + voxelAxisIndex.y * 2 + voxelAxisIndex.z * 4;
+    int voxelIndex = voxelAxisIndex.x + voxelAxisIndex.y * 2 + voxelAxisIndex.z * 4;
     return VoxelHit
     ( 
         ((1 << voxelIndex) & octree[voxelBrick.AbsoluteIndex]) != 0,
@@ -199,15 +199,27 @@ VoxelHit TraverseChunk(inout DDA dda, in VoxelBrick voxelBrick, vec3 hitPos)
         }
         else
         {
-            StepLevelDownOctree(dda, voxelBrick, hit);
-
             //Stepping INSIDE the voxel brick
-            uvec3 previousHitVoxelIndex = hit.HitVoxelIndex;
+            ivec3 previousHitVoxelIndex = hit.HitVoxelIndex;
+            dda.CellSize = pow(0.5f, voxelBrick.Level + 1);
             StepDDA(dda);
-            uvec3 nextVoxelIndexToCheck = previousHitVoxelIndex + dda.CurrentStepDirection;
-            if(any(lessThan(nextVoxelIndexToCheck, uvec3(0))) || any(greaterThan(nextVoxelIndexToCheck, uvec3(1))))
+            ivec3 nextVoxelIndexToCheck = previousHitVoxelIndex + dda.CurrentStepDirection;
+            //if(any(lessThan(nextVoxelIndexToCheck, uvec3(0))) || any(greaterThan(nextVoxelIndexToCheck, uvec3(1))))
+           // if (nextVoxelIndexToCheck.x < 0 || nextVoxelIndexToCheck.x > 1 ||
+           //     nextVoxelIndexToCheck.y < 0 || nextVoxelIndexToCheck.y > 1 ||
+           //     nextVoxelIndexToCheck.z < 0 || nextVoxelIndexToCheck.z > 1)
+           // if(false)
+           // {
+           //     //go to sibling of parent
+           //     return hit;
+           //     //StepLevelUpOctree(dda, voxelBrick, hit);
+           // }
+           // else
             {
+                //go to sibling of self
                 StepLevelUpOctree(dda, voxelBrick, hit);
+                hit.HitVoxelIndex = nextVoxelIndexToCheck;
+                StepLevelDownOctree(dda, voxelBrick, hit);
             }
         }
     }
@@ -224,8 +236,9 @@ VoxelHit TraverseDDA(const Ray ray, float maxDistance)
 {
     DDA dda = StartDDA(ray);
 
-    VoxelHit result = VoxelHit(false, uvec3(0), 0, vec3(0));
+    VoxelHit result = VoxelHit(false, ivec3(0), 0, vec3(0));
     VoxelBrick voxelBrick;
+
 
     while(dda.TotalDistance < maxDistance && result.IsHit == false)
     {
@@ -242,7 +255,7 @@ VoxelHit TraverseDDA(const Ray ray, float maxDistance)
             vec3 hitPos = ray.Origin + ray.Direction * dda.TotalDistance;
             result = TraverseChunk(dda, voxelBrick, hitPos);
 
-            if(result.IsHit)
+            //if(result.IsHit)
             {
                 break;
             }
