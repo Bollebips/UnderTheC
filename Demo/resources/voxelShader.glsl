@@ -208,19 +208,20 @@ VoxelHit TraverseChunk(inout DDA dda, in VoxelBrick voxelBrick, vec3 hitPos)
            // if (nextVoxelIndexToCheck.x < 0 || nextVoxelIndexToCheck.x > 1 ||
            //     nextVoxelIndexToCheck.y < 0 || nextVoxelIndexToCheck.y > 1 ||
            //     nextVoxelIndexToCheck.z < 0 || nextVoxelIndexToCheck.z > 1)
-           // if(false)
-           // {
-           //     //go to sibling of parent
-           //     return hit;
-           //     //StepLevelUpOctree(dda, voxelBrick, hit);
-           // }
-           // else
-            {
-                //go to sibling of self
-                StepLevelUpOctree(dda, voxelBrick, hit);
-                hit.HitVoxelIndex = nextVoxelIndexToCheck;
-                StepLevelDownOctree(dda, voxelBrick, hit);
-            }
+           if(false)
+           {
+               //go to sibling of parent
+               return hit;
+               //StepLevelUpOctree(dda, voxelBrick, hit);
+           }
+           else
+           {
+               return hit;
+               //go to sibling of self
+               StepLevelUpOctree(dda, voxelBrick, hit);
+               hit.HitVoxelIndex = nextVoxelIndexToCheck;
+               StepLevelDownOctree(dda, voxelBrick, hit);
+           }
         }
     }
     
@@ -238,7 +239,6 @@ VoxelHit TraverseDDA(const Ray ray, float maxDistance)
 
     VoxelHit result = VoxelHit(false, ivec3(0), 0, vec3(0));
     VoxelBrick voxelBrick;
-
 
     while(dda.TotalDistance < maxDistance && result.IsHit == false)
     {
