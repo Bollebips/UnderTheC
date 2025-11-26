@@ -104,11 +104,20 @@ void main()
     {
         if (currentChunk == ivec3(0))
         {
+            // remove if we didn't hit a voxel
             rayHit = true;
+
+            currentVoxelParent = 0;
+            // determine which child voxel we hit
+            vec3 hitPos = rayOrigin + rayDir * totalRayDistance;
+            vec3 parentVoxelCenter = currentVoxelPos + (float(currentVoxelScale) / 2.0f);
+            ivec3 currentVoxelAxisIndex = ivec3(ceil(hitPos - parentVoxelCenter));
+            currentVoxelIndex = currentVoxelAxisIndex.x + currentVoxelAxisIndex.y * 2 + currentVoxelAxisIndex.z * 4;
+
             break;
         }
 
-        // STEP through voxel
+        // STEP through chunk
         if (totalDistanceToNextAxisIntersection.x < totalDistanceToNextAxisIntersection.y && totalDistanceToNextAxisIntersection.x < totalDistanceToNextAxisIntersection.z)
         {
             totalRayDistance = totalDistanceToNextAxisIntersection.x;
@@ -133,6 +142,6 @@ void main()
 
     if (rayHit)
     {
-        imageStore(renderTarget, pixelCoord, vec4(1.0f, 0.0f, 0.0f, 1.0f));
+        imageStore(renderTarget, pixelCoord, vec4(float(currentVoxelIndex) / 8.0f, 0.0f, 0.0f, 1.0f));
     }
 }
