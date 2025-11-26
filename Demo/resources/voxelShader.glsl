@@ -8,7 +8,6 @@ layout (rgba32f, binding = 0) uniform writeonly image2D renderTarget;
 layout(location = 0) uniform mat4 cameraTransform;
 layout(location = 1) uniform vec4 viewportDimensions;
 
-
 const float collisionDistance = 0.001f;
 const int maxSteps = 32;
 
@@ -20,13 +19,16 @@ const uint64_t voxelBrick_OLD = 0x505A000F88FFFFFFul;
 //1000 1000 1111 1111
 //1111 1111 1111 1111
 
-// 1
-//1 1 1 1 1 1 1 1
-                            
+//              1
+//    /     |      |     \
+//   1      0      1      1
+//  / \    / \    / \    / \
 // 2  2   0  0   2  2   D  D 
 // 01 01  00 00  01 01  10 10
 // 00 00  00 00  00 00  11 11
 
+//   1      1      1      1
+//  / \    / \    / \    / \
 // D  C   D  C   F  F   F  F
 // 10 00  10 00  11 11  11 11
 // 11 11  11 11  11 11  11 11
@@ -216,11 +218,11 @@ VoxelHit TraverseChunk(inout DDA dda, in VoxelBrick voxelBrick, vec3 hitPos)
            }
            else
            {
-               return hit;
                //go to sibling of self
                StepLevelUpOctree(dda, voxelBrick, hit);
                hit.HitVoxelIndex = nextVoxelIndexToCheck;
                StepLevelDownOctree(dda, voxelBrick, hit);
+               return hit;
            }
         }
     }
@@ -255,7 +257,7 @@ VoxelHit TraverseDDA(const Ray ray, float maxDistance)
             vec3 hitPos = ray.Origin + ray.Direction * dda.TotalDistance;
             result = TraverseChunk(dda, voxelBrick, hitPos);
 
-            //if(result.IsHit)
+            if(result.IsHit)
             {
                 break;
             }
@@ -314,7 +316,8 @@ void main()
     VoxelHit result = TraverseDDA(ray, farPlaneDistance);
     if(result.IsHit)
     {
-        imageStore(renderTarget, pixelCoord, vec4(0.5f * (result.HitNormal + 1.0f), 1.0f));
+        //imageStore(renderTarget, pixelCoord, vec4(0.5f * (result.HitNormal + 1.0f), 1.0f));
+        imageStore(renderTarget, pixelCoord, vec4(vec3(result.VoxelIndex), 1.0f));
     }
     else if(false)
     {

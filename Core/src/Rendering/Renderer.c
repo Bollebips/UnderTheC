@@ -39,7 +39,7 @@ bool RendererInit(Renderer* renderer)
 
     glViewport(0, 0, width, height);
 
-    GLuint computeShaderHandle = CreateComputeShader("resources/voxelShader.glsl");
+    GLuint computeShaderHandle = CreateComputeShader("resources/voxelShader_v2.glsl");
 
     GLuint shaderProgram = glCreateProgram();
     glAttachShader(shaderProgram, computeShaderHandle);
@@ -90,8 +90,7 @@ bool RendererInit(Renderer* renderer)
     voxelArray[6] = 0x00;
     voxelArray[7] = 0x22;
 
-    LogAssert(sizeof(voxelArray) / sizeof(voxelArray[0]) == pow(VOXEL_CHUNK_SIZE, 3), "Size was %d but should be %f",
-              sizeof(voxelArray) / sizeof(voxelArray[0]), pow(VOXEL_CHUNK_SIZE, 3));
+    LogAssert(sizeof(voxelArray) / sizeof(voxelArray[0]) == pow(VOXEL_CHUNK_SIZE, 3), "Size was %d but should be %f", sizeof(voxelArray) / sizeof(voxelArray[0]), pow(VOXEL_CHUNK_SIZE, 3));
 
     PopulateVoxelChunk(&renderer->VoxelChunk.Octree, voxelArray);
 
@@ -126,7 +125,7 @@ void Render(Renderer* renderer)
         float deltaTime = (currentTime.tv_sec - prevTime.tv_sec) + (currentTime.tv_nsec - prevTime.tv_nsec) * 1e-9;
         timespec_get(&prevTime, TIME_UTC);
 
-        LogInfo("%f", 1.0f / deltaTime);
+        //LogInfo("%f", 1.0f / deltaTime);
 
         averageDeltaTime = ((averageDeltaTime * deltaTimeSampleCount) + deltaTime) / (deltaTimeSampleCount + 1);
         deltaTimeSampleCount++;
