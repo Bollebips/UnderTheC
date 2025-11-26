@@ -1,5 +1,6 @@
 #version 460 core
 #extension GL_ARB_gpu_shader_int64 : require
+#extension GL_NV_gpu_shader5 : require
 
 layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
 
@@ -25,7 +26,7 @@ layout(location = 1) uniform vec4 viewportDimensions;
 // 10 00  10 00  11 11  11 11
 // 11 11  11 11  11 11  11 11
 
-layout(location = 2) uniform uint octree[9];
+layout(location = 2) uniform uint8_t octree[9];
 
 #define cameraRight vec3(cameraTransform[0])
 #define cameraUp vec3(cameraTransform[1])
@@ -102,17 +103,25 @@ void main()
 
     while (totalRayDistance <= farPlaneDistance && rayHit == false)
     {
+        // we hit a non-empty chunk
         if (currentChunk == ivec3(0))
         {
             // remove if we didn't hit a voxel
             rayHit = true;
-
-            currentVoxelParent = 0;
-            // determine which child voxel we hit
             vec3 hitPos = rayOrigin + rayDir * totalRayDistance;
+
+            // the current parent is the chunk root voxel
+            currentVoxelParent = 0;
             vec3 parentVoxelCenter = currentVoxelPos + (float(currentVoxelScale) / 2.0f);
-            ivec3 currentVoxelAxisIndex = ivec3(ceil(hitPos - parentVoxelCenter));
-            currentVoxelIndex = currentVoxelAxisIndex.x + currentVoxelAxisIndex.y * 2 + currentVoxelAxisIndex.z * 4;
+
+            // determine which child voxel we hit
+            ivec3 childVoxelAxisIndex = ivec3(ceil(hitPos - parentVoxelCenter));
+            uint8_t childVoxelIndex = uint8_t(childVoxelAxisIndex.x) + uint8_t(childVoxelAxisIndex.y * 2) + uint8_t(childVoxelAxisIndex.z * 4);
+
+            bool childVoxelIsOccupied = bool(octree[currentVoxelParent] & (uint8_t(1) << childVoxelIndex));
+            rayHit = childVoxelIsOccupied;
+
+            currentVoxelIndex = int(childVoxelIndex);
 
             break;
         }
