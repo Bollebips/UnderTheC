@@ -72,23 +72,22 @@ void main()
     ivec3 rayStepDirection = ivec3(sign(rayDir));
     ivec3 rayCurrentStepDirection;
 
-    const int chunkVoxelLevel = 2;
-    float chunkScale = 1f;
+    const int chunkVoxelScale = 2;
+    float chunkExtents = 4f;
 
-    int currentVoxelParent; // the parent of the current voxel being traversed
-    int currentVoxelIndex; // the child index of the current voxel (0-7)
-    vec3 currentVoxelPos; // position of the current voxel
-    int currentVoxelLevel = chunkVoxelLevel; // level down the voxel hierarchy. Higher level -> higher up the hierarchy
-    float currentVoxelScale = float(chunkScale) * pow(2, currentVoxelLevel - chunkVoxelLevel);
+    uint8_t currentVoxelParent; // the parent of the current voxel being traversed
+    uint8_t currentVoxelIndex; // the child index of the current voxel (0-7)
+    int currentVoxelScale = chunkVoxelScale; // scale down the voxel hierarchy. Higher scale -> higher up the hierarchy
+    float currentVoxelExtents = float(chunkExtents) * pow(2, currentVoxelScale - chunkVoxelScale);
 
-    int minVoxelLevel = 1; // TEMP. Should be 0 in the end, cause we wanna traverse as low of a level as possible
+    int minVoxelScale = 0; // TEMP. Should be 0 in the end, cause we wanna traverse as low of a scale as possible
 
-    ivec3 currentChunk = ivec3(floor(rayOrigin / chunkScale));
-    vec3 rayOriginRelativeToVoxel = rayOrigin / currentVoxelScale;
+    ivec3 currentChunk = ivec3(floor(rayOrigin / chunkExtents));
+    vec3 rayOriginRelativeToVoxel = rayOrigin / currentVoxelExtents;
 
     float totalRayDistance = 0f;
     vec3 totalDistanceToNextAxisIntersection;
-    vec3 distanceBetweenAxisIntersections = abs(1.0f / rayDir) * currentVoxelScale;
+    vec3 distanceBetweenAxisIntersections = abs(1.0f / rayDir);
     vec3 initialDistanceToAxisIntersection;
     // TODO: This only calculates the distance to the next chunk, but doesn't take into account the current chunk/voxel we are in
     initialDistanceToAxisIntersection.x = rayDir.x < 0 ? rayOriginRelativeToVoxel.x - (floor(rayOriginRelativeToVoxel.x)) : (floor(rayOriginRelativeToVoxel.x) + 1) - rayOriginRelativeToVoxel.x;
@@ -97,7 +96,7 @@ void main()
     // still need to multiply by the normalized distance between intersections, since the calculations above don't take that into account
     initialDistanceToAxisIntersection *= distanceBetweenAxisIntersections;
 
-    totalDistanceToNextAxisIntersection = initialDistanceToAxisIntersection * currentVoxelScale;
+    totalDistanceToNextAxisIntersection = initialDistanceToAxisIntersection * currentVoxelExtents;
 
     bool rayHit = false;
 
@@ -106,36 +105,59 @@ void main()
         // we hit a non-empty chunk
         if (currentChunk == ivec3(0))
         {
-            int parentVoxelStack[chunkVoxelLevel];
+            uint8_t parentVoxelStack[chunkVoxelScale];
 
             // TODO: remove this if we didn't hit a voxel
             rayHit = true;
             vec3 hitPos = rayOrigin + rayDir * totalRayDistance;
 
+            break;
+
+            // define the starting voxel
+            // we basically already perform a PUSH, so we define our first voxel to have the chunk as parent
             // the current parent is the chunk root voxel
-            currentVoxelParent = 0;
-            vec3 parentVoxelCenter = currentVoxelPos + (float(currentVoxelScale) / 2.0f);
+            currentVoxelParent = uint8_t(0);
+            parentVoxelStack[currentVoxelScale - 1] = currentVoxelParent;
+            currentVoxelScale--;
 
-            // PUSH down a level to determine which child voxel we hit
+            vec3 currentChunkPos = currentChunk * chunkExtents;
+            vec3 currentChunkCenter = currentChunkPos + (chunkExtents / 2.0f);
 
-            // replace this with a check if the current voxel is a leaf voxel
-            if (currentVoxelLevel <= minVoxelLevel)
+            vec3 parentVoxelPos = currentChunkPos;
+            vec3 parentVoxelCenter = currentChunkCenter;
+            vec3 hitPosWithinParentVoxel = (hitPos - (parentVoxelPos)) / currentVoxelExtents;
+
+            currentVoxelExtents = float(chunkExtents) * pow(2, currentVoxelScale - chunkVoxelScale);
+
+            ivec3 currentVoxelAxisIndex = ivec3(round(hitPosWithinParentVoxel));
+            //ivec3 currentVoxelAxisIndex = ivec3(ceil(hitPos - parentVoxelCenter));
+            currentVoxelIndex = uint8_t(currentVoxelAxisIndex.x | (currentVoxelAxisIndex.y << 1) | (currentVoxelAxisIndex.z << 2));
+            //rayHit = bool(octree[currentVoxelParent] & (uint8_t(1) << currentVoxelIndex));
+            vec3 currentVoxelPos = currentChunkPos + (currentVoxelExtents / 2.0f);
+
+            // TODO: Change this to break EITHER if we leave the chunk or if the currently hit voxel is the smallest
+            while (rayHit)
             {
-                break;
+                // replace this with a check if the current voxel is a leaf voxel
+                if (currentVoxelScale <= minVoxelScale)
+                {
+                    break;
+                }
+
+                // PUSH down a scale to determine which child voxel we hit
+                if (rayHit)
+                {
+                    currentVoxelParent = currentVoxelIndex;
+                    parentVoxelStack[currentVoxelScale - 1] = currentVoxelParent;
+                    currentVoxelScale--;
+
+                    parentVoxelCenter += (float(currentVoxelExtents));
+                    currentVoxelExtents = float(chunkExtents) * pow(2, currentVoxelScale - chunkVoxelScale);
+
+                    currentVoxelAxisIndex = ivec3(ceil(hitPos - parentVoxelCenter));
+                    currentVoxelIndex = uint8_t(currentVoxelAxisIndex.x | (currentVoxelAxisIndex.y << 1) | (currentVoxelAxisIndex.z << 2));
+                }
             }
-
-            // PUSH
-            parentVoxelStack[currentVoxelLevel - 1] = currentVoxelParent;
-            currentVoxelLevel--;
-
-            ivec3 childVoxelAxisIndex = ivec3(ceil(hitPos - parentVoxelCenter));
-            uint8_t childVoxelIndex = uint8_t(childVoxelAxisIndex.x | (childVoxelAxisIndex.y << 1) | (childVoxelAxisIndex.z << 2));
-            vec3 childVoxelPos = currentVoxelPos + (currentVoxelScale / 2.0f);
-
-            bool childVoxelIsOccupied = bool(octree[currentVoxelParent] & (uint8_t(1) << childVoxelIndex));
-            rayHit = childVoxelIsOccupied;
-
-            currentVoxelIndex = int(childVoxelIndex);
 
             break;
         }
@@ -144,19 +166,19 @@ void main()
         if (totalDistanceToNextAxisIntersection.x < totalDistanceToNextAxisIntersection.y && totalDistanceToNextAxisIntersection.x < totalDistanceToNextAxisIntersection.z)
         {
             totalRayDistance = totalDistanceToNextAxisIntersection.x;
-            totalDistanceToNextAxisIntersection.x += distanceBetweenAxisIntersections.x * currentVoxelScale;
+            totalDistanceToNextAxisIntersection.x += distanceBetweenAxisIntersections.x * currentVoxelExtents;
             rayCurrentStepDirection = ivec3(rayStepDirection.x, 0, 0);
         }
         else if (totalDistanceToNextAxisIntersection.y < totalDistanceToNextAxisIntersection.x && totalDistanceToNextAxisIntersection.y < totalDistanceToNextAxisIntersection.z)
         {
             totalRayDistance = totalDistanceToNextAxisIntersection.y;
-            totalDistanceToNextAxisIntersection.y += distanceBetweenAxisIntersections.y * currentVoxelScale;
+            totalDistanceToNextAxisIntersection.y += distanceBetweenAxisIntersections.y * currentVoxelExtents;
             rayCurrentStepDirection = ivec3(0, rayStepDirection.y, 0);
         }
         else
         {
             totalRayDistance = totalDistanceToNextAxisIntersection.z;
-            totalDistanceToNextAxisIntersection.z += distanceBetweenAxisIntersections.z * currentVoxelScale;
+            totalDistanceToNextAxisIntersection.z += distanceBetweenAxisIntersections.z * currentVoxelExtents;
             rayCurrentStepDirection = ivec3(0, 0, rayStepDirection.z);
         }
 
@@ -165,6 +187,8 @@ void main()
 
     if (rayHit)
     {
-        imageStore(renderTarget, pixelCoord, vec4(float(currentVoxelIndex) / 8.0f, 0.0f, 0.0f, 1.0f));
+        vec3 hitPos = rayOrigin + (rayDir * totalRayDistance);
+        imageStore(renderTarget, pixelCoord, vec4(hitPos, 1.0f));
+        //imageStore(renderTarget, pixelCoord, vec4(float(currentVoxelIndex) / 8.0f, 0.0f, 0.0f, 1.0f));
     }
 }
