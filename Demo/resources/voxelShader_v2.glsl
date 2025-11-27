@@ -69,6 +69,9 @@ void main()
 
     vec3 rayOrigin = pixelPos;
     vec3 rayDir = normalize(pixelPos - cameraPos);
+    // TODO: Check for divide by zero
+    vec3 rayCoefficient = 1.0f / rayDir;
+    vec3 rayBias = (-rayOrigin) / rayDir;
     ivec3 rayStepDirection = ivec3(sign(rayDir));
     ivec3 rayCurrentStepDirection;
 
@@ -83,11 +86,13 @@ void main()
     int minVoxelLevel = 0; // TEMP. Should be 0 in the end, cause we wanna traverse as low of a level as possible
 
     ivec3 currentChunk = ivec3(floor(rayOrigin / chunkExtents));
+    vec3 currentVoxelPos = currentChunk * chunkExtents;
+
     vec3 rayOriginRelativeToVoxel = rayOrigin / currentVoxelExtents;
 
     float totalRayDistance = 0f;
     vec3 totalDistanceToNextAxisIntersection;
-    vec3 distanceBetweenAxisIntersections = abs(1.0f / rayDir);
+    vec3 distanceBetweenAxisIntersections = abs(currentVoxelExtents / rayDir);
     vec3 initialDistanceToAxisIntersection;
     // TODO: This only calculates the distance to the next chunk, but doesn't take into account the current chunk/voxel we are in
     initialDistanceToAxisIntersection.x = rayDir.x < 0 ? rayOriginRelativeToVoxel.x - (floor(rayOriginRelativeToVoxel.x)) : (floor(rayOriginRelativeToVoxel.x) + 1) - rayOriginRelativeToVoxel.x;
@@ -96,7 +101,23 @@ void main()
     // still need to multiply by the normalized distance between intersections, since the calculations above don't take that into account
     initialDistanceToAxisIntersection *= distanceBetweenAxisIntersections;
 
-    totalDistanceToNextAxisIntersection = initialDistanceToAxisIntersection * currentVoxelExtents;
+    //vec3 negativeVoxelCorner = floor(rayOrigin / currentVoxelExtents) * currentVoxelExtents;
+    //vec3 positiveVoxelCorner = ceil(rayOrigin / currentVoxelExtents) * currentVoxelExtents;
+    vec3 negativeVoxelCorner = currentVoxelPos;
+    vec3 positiveVoxelCorner = currentVoxelPos + vec3(currentVoxelExtents, currentVoxelExtents, currentVoxelExtents);
+    vec3 backwardsVoxelCorner;
+    vec3 forwardsVoxelCorner;
+    backwardsVoxelCorner.x = rayDir.x < 0 ? positiveVoxelCorner.x : negativeVoxelCorner.x;
+    backwardsVoxelCorner.y = rayDir.y < 0 ? positiveVoxelCorner.y : negativeVoxelCorner.y;
+    backwardsVoxelCorner.z = rayDir.z < 0 ? positiveVoxelCorner.z : negativeVoxelCorner.z;
+    forwardsVoxelCorner.x = rayDir.x >= 0 ? positiveVoxelCorner.x : negativeVoxelCorner.x;
+    forwardsVoxelCorner.y = rayDir.y >= 0 ? positiveVoxelCorner.y : negativeVoxelCorner.y;
+    forwardsVoxelCorner.z = rayDir.z >= 0 ? positiveVoxelCorner.z : negativeVoxelCorner.z;
+
+    totalDistanceToNextAxisIntersection = initialDistanceToAxisIntersection;
+    totalDistanceToNextAxisIntersection = rayCoefficient * forwardsVoxelCorner + rayBias;
+
+    vec3 totalDistanceToPreviousAxisIntersection = rayCoefficient * forwardsVoxelCorner + rayBias;
 
     bool rayHit = false;
 
@@ -110,6 +131,8 @@ void main()
             // TODO: remove this if we didn't hit a voxel
             rayHit = true;
             vec3 hitPos = rayOrigin + rayDir * totalRayDistance;
+
+            break;
 
             // define the starting voxel
             // we basically already perform a PUSH, so we define our first voxel to have the chunk as parent
@@ -129,10 +152,9 @@ void main()
             ivec3 currentVoxelAxisIndex = ivec3(round((hitPos - (parentVoxelPos)) / parentVoxelExtents));
             currentVoxelIndex = uint8_t(currentVoxelAxisIndex.x | (currentVoxelAxisIndex.y << 1) | (currentVoxelAxisIndex.z << 2));
             rayHit = bool(octree[currentVoxelParent] & (uint8_t(1) << currentVoxelIndex));
-            vec3 currentVoxelPos = currentChunkPos + (currentVoxelExtents / 2.0f);
 
             // TODO: Change this to break EITHER if we leave the chunk or if the currently hit voxel is the smallest
-            while (rayHit)
+            while (true)
             {
                 // replace this with a check if the current voxel is a leaf voxel
                 if (currentVoxelLevel <= minVoxelLevel)
@@ -155,6 +177,41 @@ void main()
                     currentVoxelExtents = float(chunkExtents) * pow(2, currentVoxelLevel - chunkVoxelLevel);
                     currentVoxelAxisIndex = ivec3(round((hitPos - (parentVoxelPos)) / parentVoxelExtents));
                     currentVoxelIndex = uint8_t(currentVoxelAxisIndex.x | (currentVoxelAxisIndex.y << 1) | (currentVoxelAxisIndex.z << 2));
+
+                    // TODO: Calculate where to find the occupancy mask of its parent voxel (in the octree)
+                    // for this we have to take into account if we have to skip empty parent voxels (since they don't occupy space in the octree with their children)
+                }
+                else
+                {
+                    // ADVANCE to the next sibling
+                    distanceBetweenAxisIntersections = abs(currentVoxelExtents / rayDir);
+                    totalDistanceToNextAxisIntersection = totalDistanceToPreviousAxisIntersection + distanceBetweenAxisIntersections;
+
+                    //totalDistanceToNextAxisIntersection -= (distanceBetweenAxisIntersections * currentVoxelExtents);
+                    uint8_t nextSiblingVoxel = currentVoxelIndex;
+                    bool isSibling;
+                    if (totalDistanceToNextAxisIntersection.x < totalDistanceToNextAxisIntersection.y && totalDistanceToNextAxisIntersection.x < totalDistanceToNextAxisIntersection.z)
+                    {
+                        nextSiblingVoxel ^= uint8_t(1 << 0);
+                        isSibling = sign(rayDir.x) == sign(currentVoxelIndex - nextSiblingVoxel);
+                    }
+                    else if (totalDistanceToNextAxisIntersection.y < totalDistanceToNextAxisIntersection.x && totalDistanceToNextAxisIntersection.y < totalDistanceToNextAxisIntersection.z)
+                    {
+                        nextSiblingVoxel ^= uint8_t(1 << 1);
+                        isSibling = sign(rayDir.y) == sign(currentVoxelIndex - nextSiblingVoxel);
+                    }
+                    else
+                    {
+                        nextSiblingVoxel ^= uint8_t(1 << 2);
+                        isSibling = sign(rayDir.z) == sign(currentVoxelIndex - nextSiblingVoxel);
+                    }
+
+                    if (isSibling)
+                    {
+                        rayHit = true;
+                    }
+
+                    break;
                 }
             }
 
@@ -165,19 +222,22 @@ void main()
         if (totalDistanceToNextAxisIntersection.x < totalDistanceToNextAxisIntersection.y && totalDistanceToNextAxisIntersection.x < totalDistanceToNextAxisIntersection.z)
         {
             totalRayDistance = totalDistanceToNextAxisIntersection.x;
-            totalDistanceToNextAxisIntersection.x += distanceBetweenAxisIntersections.x * currentVoxelExtents;
+            totalDistanceToPreviousAxisIntersection.x = totalDistanceToNextAxisIntersection.x;
+            totalDistanceToNextAxisIntersection.x += distanceBetweenAxisIntersections.x;
             rayCurrentStepDirection = ivec3(rayStepDirection.x, 0, 0);
         }
         else if (totalDistanceToNextAxisIntersection.y < totalDistanceToNextAxisIntersection.x && totalDistanceToNextAxisIntersection.y < totalDistanceToNextAxisIntersection.z)
         {
             totalRayDistance = totalDistanceToNextAxisIntersection.y;
-            totalDistanceToNextAxisIntersection.y += distanceBetweenAxisIntersections.y * currentVoxelExtents;
+            totalDistanceToPreviousAxisIntersection.y = totalDistanceToNextAxisIntersection.y;
+            totalDistanceToNextAxisIntersection.y += distanceBetweenAxisIntersections.y;
             rayCurrentStepDirection = ivec3(0, rayStepDirection.y, 0);
         }
         else
         {
             totalRayDistance = totalDistanceToNextAxisIntersection.z;
-            totalDistanceToNextAxisIntersection.z += distanceBetweenAxisIntersections.z * currentVoxelExtents;
+            totalDistanceToPreviousAxisIntersection.z = totalDistanceToNextAxisIntersection.z;
+            totalDistanceToNextAxisIntersection.z += distanceBetweenAxisIntersections.z;
             rayCurrentStepDirection = ivec3(0, 0, rayStepDirection.z);
         }
 
@@ -187,7 +247,8 @@ void main()
     if (rayHit)
     {
         vec3 hitPos = rayOrigin + (rayDir * totalRayDistance);
-        //imageStore(renderTarget, pixelCoord, vec4(hitPos, 1.0f));
-        imageStore(renderTarget, pixelCoord, vec4(float(currentVoxelIndex) / 8.0f, 0.0f, 0.0f, 1.0f));
+        imageStore(renderTarget, pixelCoord, vec4(hitPos, 1.0f));
+        //imageStore(renderTarget, pixelCoord, vec4(planeIntersections0, 1.0f));
+        //imageStore(renderTarget, pixelCoord, vec4(float(currentVoxelIndex) / 8.0f, 0.0f, 0.0f, 1.0f));
     }
 }
