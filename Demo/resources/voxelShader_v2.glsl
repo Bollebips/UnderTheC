@@ -1,5 +1,4 @@
 #version 460 core
-#extension GL_ARB_gpu_shader_int64 : require
 #extension GL_NV_gpu_shader5 : require
 
 layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
@@ -26,7 +25,7 @@ layout(location = 1) uniform vec4 viewportDimensions;
 // 10 00  10 00  11 11  11 11
 // 11 11  11 11  11 11  11 11
 
-layout(location = 2) uniform uint8_t octree[9];
+layout(location = 2) uniform uint octree[9];
 
 #define cameraRight vec3(cameraTransform[0])
 #define cameraUp vec3(cameraTransform[1])
@@ -78,7 +77,7 @@ void main()
     const int chunkVoxelLevel = 2;
     float chunkExtents = 1f;
 
-    uint8_t currentVoxelParent;              // the parent of the current voxel being traversed
+    uint8_t currentVoxelParentIndexInOctree; // the parent of the current voxel being traversed
     uint8_t currentVoxelIndex;               // the child index of the current voxel (0-7)
     int currentVoxelLevel = chunkVoxelLevel; // level down the voxel hierarchy. Higher level -> higher up the hierarchy
     float currentVoxelExtents = float(chunkExtents) * pow(2, currentVoxelLevel - chunkVoxelLevel);
@@ -138,8 +137,8 @@ void main()
             // define the starting voxel
             // we basically already perform a PUSH, so we define our first voxel to have the chunk as parent
             // the current parent is the chunk root voxel
-            currentVoxelParent = uint8_t(0);
-            parentVoxelStack[currentVoxelLevel - 1] = currentVoxelParent;
+            currentVoxelParentIndexInOctree = uint8_t(0);
+            parentVoxelStack[currentVoxelLevel - 1] = currentVoxelParentIndexInOctree;
             currentVoxelLevel--;
 
             vec3 currentChunkCenter = currentChunkPos + (chunkExtents / 2.0f);
@@ -153,7 +152,6 @@ void main()
             currentVoxelExtents = float(chunkExtents) * pow(2, currentVoxelLevel - chunkVoxelLevel);
             ivec3 currentVoxelAxisIndex = ivec3(round((hitPos - parentVoxelPos) / parentVoxelExtents));
             currentVoxelIndex = uint8_t(currentVoxelAxisIndex.x | (currentVoxelAxisIndex.y << 1) | (currentVoxelAxisIndex.z << 2));
-            rayHit = bool(octree[currentVoxelParent] & (uint8_t(1) << currentVoxelIndex));
 
             negativeVoxelCorner = parentVoxelPos + (currentVoxelAxisIndex * currentVoxelExtents);
             positiveVoxelCorner = parentVoxelPos + ((currentVoxelAxisIndex + rayStepDirection) * currentVoxelExtents);
@@ -176,13 +174,22 @@ void main()
                     break;
                 }
 
+                uint8_t parentVoxelOccupancyMask = (uint8_t(octree[currentVoxelParentIndexInOctree]) & uint8_t(0xFF));
+                rayHit = bool(parentVoxelOccupancyMask & (uint8_t(1) << currentVoxelIndex));
+
                 // PUSH down a level to determine which child voxel we hit
                 if (rayHit)
                 {
                     hitPos = rayOrigin + rayDir * totalRayDistance;
 
-                    currentVoxelParent = currentVoxelIndex;
-                    parentVoxelStack[currentVoxelLevel - 1] = currentVoxelParent;
+                    // find the next index in the octree
+                    //uint8_t numberOfOccupiedSiblings = uint8_t(0);
+                    //for (int i = 0; i < 8; ++i)
+                    //{
+                    //    numberOfOccupiedSiblings += parentVoxelOccupancyMask & uint8_t(1 << i);
+                    //}
+                    //currentVoxelParentIndexInOctree += numberOfOccupiedSiblings* currentVoxelParentIndexInOctree = currentVoxelIndex;
+                    parentVoxelStack[currentVoxelLevel - 1] = currentVoxelParentIndexInOctree;
                     currentVoxelLevel--;
 
                     parentVoxelExtents = currentVoxelExtents;

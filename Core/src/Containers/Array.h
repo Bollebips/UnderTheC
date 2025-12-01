@@ -26,24 +26,24 @@
 #define INITIAL_CAPACITY 16
 #define CAPACITY_MULTIPLIER 2
 
-#define Array(T)                                                                                                                                               \
-    struct                                                                                                                                                     \
-    {                                                                                                                                                          \
-        T* Items;                                                                                                                                              \
-        size_t Length;                                                                                                                                         \
-        size_t Capacity;                                                                                                                                       \
+#define Array(T)         \
+    struct               \
+    {                    \
+        T* Items;        \
+        size_t Length;   \
+        size_t Capacity; \
     }
 
-#define ArrayAdd(_array, _element)                                                                                                                             \
-    do                                                                                                                                                         \
-    {                                                                                                                                                          \
-        if (_array->Length >= _array->Capacity)                                                                                                                \
-        {                                                                                                                                                      \
-            if (_array->Capacity == 0) _array->Capacity = INITIAL_CAPACITY;                                                                                    \
-            else _array->Capacity *= CAPACITY_MULTIPLIER;                                                                                                      \
-            _array->Items = realloc(_array->Items, _array->Capacity * sizeof(*_array->Items));                                                             \
-        }                                                                                                                                                      \
-        _array->Items[_array->Length++] = _element;                                                                                                            \
+#define ArrayAdd(_array, _element)                                                                     \
+    do                                                                                                 \
+    {                                                                                                  \
+        if ((_array)->Length >= (_array)->Capacity)                                                    \
+        {                                                                                              \
+            if ((_array)->Capacity == 0) (_array)->Capacity = INITIAL_CAPACITY;                        \
+            else (_array)->Capacity *= CAPACITY_MULTIPLIER;                                            \
+            (_array)->Items = realloc((_array)->Items, (_array)->Capacity * sizeof(*(_array)->Items)); \
+        }                                                                                              \
+        (_array)->Items[(_array)->Length++] = _element;                                                \
     } while (0)
 
 // VoxC_API void* ArrayAdd(Array* array, const void* newElement);

@@ -1,4 +1,5 @@
 #include "Renderer.h"
+#include "Rendering/SparseVoxelOctree.h"
 
 #include <math.h>
 #include <stdlib.h>
@@ -72,7 +73,7 @@ bool RendererInit(Renderer* renderer)
     renderer->Texture = CreateTexture(width, height);
     AttachTextureToFramebuffer(renderer);
 
-    u32 voxelArray[64] = {0};
+    u8 voxelArray[64] = {0};
     // voxelArray[0] = 0xFF;
     // voxelArray[1] = 0xFF;
     // voxelArray[2] = 0xFF;
