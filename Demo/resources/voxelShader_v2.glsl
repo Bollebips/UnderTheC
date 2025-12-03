@@ -60,9 +60,9 @@ void main()
 
     vec3 pixelPos =
         cameraPos +
-        viewportU * clipSpacePixelCoord.x * 0.5f +
-        viewportV * clipSpacePixelCoord.y * 0.5f +
-        cameraForward * nearPlaneDistance;
+            viewportU * clipSpacePixelCoord.x * 0.5f +
+            viewportV * clipSpacePixelCoord.y * 0.5f +
+            cameraForward * nearPlaneDistance;
 
     // Initialize
 
@@ -78,7 +78,7 @@ void main()
     float chunkExtents = 1f;
 
     uint8_t currentVoxelParentIndexInOctree; // the parent of the current voxel being traversed
-    uint8_t currentVoxelIndex;               // the child index of the current voxel (0-7)
+    uint8_t currentVoxelIndex; // the child index of the current voxel (0-7)
     int currentVoxelLevel = chunkVoxelLevel; // level down the voxel hierarchy. Higher level -> higher up the hierarchy
     float currentVoxelExtents = float(chunkExtents) * pow(2, currentVoxelLevel - chunkVoxelLevel);
 
@@ -153,26 +153,26 @@ void main()
             ivec3 currentVoxelAxisIndex = ivec3(round((hitPos - parentVoxelPos) / parentVoxelExtents));
             currentVoxelIndex = uint8_t(currentVoxelAxisIndex.x | (currentVoxelAxisIndex.y << 1) | (currentVoxelAxisIndex.z << 2));
 
-            negativeVoxelCorner = parentVoxelPos + (currentVoxelAxisIndex * currentVoxelExtents);
-            positiveVoxelCorner = parentVoxelPos + ((currentVoxelAxisIndex + rayStepDirection) * currentVoxelExtents);
-            backwardsVoxelCorner.x = rayDir.x < 0 ? positiveVoxelCorner.x : negativeVoxelCorner.x;
-            backwardsVoxelCorner.y = rayDir.y < 0 ? positiveVoxelCorner.y : negativeVoxelCorner.y;
-            backwardsVoxelCorner.z = rayDir.z < 0 ? positiveVoxelCorner.z : negativeVoxelCorner.z;
-            forwardsVoxelCorner.x = rayDir.x >= 0 ? positiveVoxelCorner.x : negativeVoxelCorner.x;
-            forwardsVoxelCorner.y = rayDir.y >= 0 ? positiveVoxelCorner.y : negativeVoxelCorner.y;
-            forwardsVoxelCorner.z = rayDir.z >= 0 ? positiveVoxelCorner.z : negativeVoxelCorner.z;
-
-            totalDistanceToNextAxisIntersection = rayCoefficient * forwardsVoxelCorner + rayBias;
-            totalDistanceToPreviousAxisIntersection = rayCoefficient * backwardsVoxelCorner + rayBias;
-
             // TODO: Change this to break EITHER if we leave the chunk or if the currently hit voxel is the smallest
             while (true)
             {
                 // replace this with a check if the current voxel is a leaf voxel
-                if (currentVoxelLevel <= minVoxelLevel)
+                if (currentVoxelLevel < minVoxelLevel)
                 {
                     break;
                 }
+
+                negativeVoxelCorner = parentVoxelPos + (currentVoxelAxisIndex * currentVoxelExtents);
+                positiveVoxelCorner = parentVoxelPos + ((currentVoxelAxisIndex + rayStepDirection) * currentVoxelExtents);
+                backwardsVoxelCorner.x = rayDir.x < 0 ? positiveVoxelCorner.x : negativeVoxelCorner.x;
+                backwardsVoxelCorner.y = rayDir.y < 0 ? positiveVoxelCorner.y : negativeVoxelCorner.y;
+                backwardsVoxelCorner.z = rayDir.z < 0 ? positiveVoxelCorner.z : negativeVoxelCorner.z;
+                forwardsVoxelCorner.x = rayDir.x >= 0 ? positiveVoxelCorner.x : negativeVoxelCorner.x;
+                forwardsVoxelCorner.y = rayDir.y >= 0 ? positiveVoxelCorner.y : negativeVoxelCorner.y;
+                forwardsVoxelCorner.z = rayDir.z >= 0 ? positiveVoxelCorner.z : negativeVoxelCorner.z;
+
+                totalDistanceToNextAxisIntersection = rayCoefficient * forwardsVoxelCorner + rayBias;
+                totalDistanceToPreviousAxisIntersection = rayCoefficient * backwardsVoxelCorner + rayBias;
 
                 uint8_t parentVoxelOccupancyMask = (uint8_t(octree[currentVoxelParentIndexInOctree]) & uint8_t(0xFF));
                 rayHit = bool(parentVoxelOccupancyMask & (uint8_t(1) << currentVoxelIndex));
@@ -189,6 +189,7 @@ void main()
                     //    numberOfOccupiedSiblings += parentVoxelOccupancyMask & uint8_t(1 << i);
                     //}
                     //currentVoxelParentIndexInOctree += numberOfOccupiedSiblings* currentVoxelParentIndexInOctree = currentVoxelIndex;
+                    currentVoxelParentIndexInOctree += currentVoxelIndex;
                     parentVoxelStack[currentVoxelLevel - 1] = currentVoxelParentIndexInOctree;
                     currentVoxelLevel--;
 
@@ -233,7 +234,7 @@ void main()
                     {
                         currentVoxelAxisIndex = ivec3(int(nextSiblingVoxel) & 1, int(nextSiblingVoxel >> 1) & 1, int(nextSiblingVoxel >> 2) & 1);
                         currentVoxelIndex = nextSiblingVoxel;
-                        rayHit = true;
+                        //rayHit = true;
 
                         if (totalDistanceToNextAxisIntersection.x < totalDistanceToNextAxisIntersection.y && totalDistanceToNextAxisIntersection.x < totalDistanceToNextAxisIntersection.z)
                         {
@@ -250,6 +251,7 @@ void main()
                     }
                     else
                     {
+                        currentVoxelLevel++;
                         break;
                     }
                 }
